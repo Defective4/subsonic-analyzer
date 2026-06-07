@@ -1,4 +1,5 @@
 package io.github.defective4.audioanalyzer.subsonic.model;
 
-public record Artist(String id) {
+public record SongList(Entity[] child) {
+
 }

@@ -25,7 +25,7 @@ public class SubsonicAPI {
     private static final String CLIENT_ID = "audio-analyzer";
     private static final String VERSION = "1.16.1";
     private final String baseURL;
-    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final Gson gson = new GsonBuilder().create();
     private final HexFormat hex = HexFormat.of();
     private final MessageDigest md5;
     private final char[] password;
@@ -43,8 +43,12 @@ public class SubsonicAPI {
         this.baseURL = baseURL + "/rest/";
     }
 
-    public SubsonicResponse getArtists() throws IOException {
-        return request("getArtists", Map.of());
+    public SubsonicResponse getAlbumList(int limit, int offset) throws IOException {
+        return request("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset));
+    }
+
+    public SubsonicResponse getMusicDirectory(String id) throws IOException {
+        return request("getMusicDirectory", Map.of("id", id));
     }
 
     public void ping() throws IOException {
@@ -64,7 +68,7 @@ public class SubsonicAPI {
         HttpURLConnection con = null;
         try {
             Map<String, Object> params = new HashMap<>();
-            String salt = computeSalt();
+            String salt = generateSalt();
             params.put("u", username);
             params.put("t", computeToken(salt));
             params.put("s", salt);
@@ -82,7 +86,7 @@ public class SubsonicAPI {
                     .toURL().openConnection();
             try (Reader reader = new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8)) {
                 JsonElement json = JsonParser.parseReader(reader).getAsJsonObject().get("subsonic-response");
-                System.out.println(gson.toJson(json));
+                System.out.println(json);
                 return gson.fromJson(json, SubsonicResponse.class);
             }
         } finally {
@@ -90,7 +94,7 @@ public class SubsonicAPI {
         }
     }
 
-    private static String computeSalt() {
+    private static String generateSalt() {
         return Long.toHexString(System.currentTimeMillis());
     }
 }
