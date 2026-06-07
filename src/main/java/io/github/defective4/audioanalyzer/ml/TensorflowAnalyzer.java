@@ -32,7 +32,7 @@ public class TensorflowAnalyzer {
             Map<String, Float> map = new HashMap<>();
             try (Reader reader = new InputStreamReader(con.getInputStream())) {
                 JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
-                obj.asMap().forEach((k, v) -> map.put(k, v.getAsFloat()));
+                obj.asMap().forEach((k, v) -> map.put(k.replace("-", "_").replace(".pb", ""), v.getAsFloat()));
             }
             return Collections.unmodifiableMap(map);
         } finally {

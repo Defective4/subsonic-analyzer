@@ -1,6 +1,7 @@
 package io.github.defective4.audioanalyzer.subsonic;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
@@ -47,6 +48,10 @@ public class SubsonicAPI {
         this.baseURL = baseURL + "/rest/";
     }
 
+    public InputStream download(Entity entity) throws IOException {
+        return URI.create(baseURL + "download" + constructQueryString(Map.of("id", entity.id()))).toURL().openStream();
+    }
+
     public SubsonicResponse getAlbumList(int limit, int offset) throws IOException {
         return request("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset));
     }
@@ -84,6 +89,23 @@ public class SubsonicAPI {
         return hash(new String(password) + salt);
     }
 
+    private String constructQueryString(Map<String, Object> queryParameters) {
+        Map<String, Object> params = new HashMap<>();
+        String salt = generateSalt();
+        params.put("u", username);
+        params.put("t", computeToken(salt));
+        params.put("s", salt);
+        params.put("v", VERSION);
+        params.put("c", CLIENT_ID);
+        params.put("f", "json");
+        params.putAll(queryParameters);
+        StringBuilder queryBuilder = new StringBuilder("?");
+        params.forEach((k, v) -> queryBuilder
+                .append(String.format("%s=%s&", k, URLEncoder.encode(v.toString(), StandardCharsets.UTF_8))));
+        String queryString = queryBuilder.toString();
+        return queryString.substring(0, queryBuilder.length() - 1);
+    }
+
     private String hash(String data) {
         md5.reset();
         return hex.formatHex(md5.digest(data.getBytes(StandardCharsets.UTF_8)));
@@ -92,23 +114,8 @@ public class SubsonicAPI {
     private SubsonicResponse request(String path, Map<String, Object> queryParameters) throws IOException {
         HttpURLConnection con = null;
         try {
-            Map<String, Object> params = new HashMap<>();
-            String salt = generateSalt();
-            params.put("u", username);
-            params.put("t", computeToken(salt));
-            params.put("s", salt);
-            params.put("v", VERSION);
-            params.put("c", CLIENT_ID);
-            params.put("f", "json");
-            params.putAll(queryParameters);
-            StringBuilder queryBuilder = new StringBuilder("?");
-            params.forEach((k, v) -> {
-                queryBuilder
-                        .append(String.format("%s=%s&", k, URLEncoder.encode(v.toString(), StandardCharsets.UTF_8)));
-            });
-            String queryString = queryBuilder.toString();
-            con = (HttpURLConnection) URI.create(baseURL + path + queryString.substring(0, queryString.length() - 1))
-                    .toURL().openConnection();
+            String queryString = constructQueryString(queryParameters);
+            con = (HttpURLConnection) URI.create(baseURL + path + queryString).toURL().openConnection();
             try (Reader reader = new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8)) {
                 JsonElement json = JsonParser.parseReader(reader).getAsJsonObject().get("subsonic-response");
                 return gson.fromJson(json, SubsonicResponse.class);
