@@ -13,21 +13,15 @@ import com.google.gson.JsonParser;
 
 public class TensorflowAnalyzer implements AutoCloseable {
 
-    private final String venv;
     private static final String ANALYZER_PY = "/analyzer.py";
     private static final String BASH = "/bin/bash";
     private final Path pyFile;
+    private final String venv;
 
     public TensorflowAnalyzer(String venv) throws IOException {
         this.venv = venv;
         pyFile = Files.createTempFile("aa", ".py");
         prepare();
-    }
-
-    private void prepare() throws IOException {
-        try (InputStream in = getClass().getResourceAsStream(ANALYZER_PY)) {
-            Files.copy(in, pyFile, StandardCopyOption.REPLACE_EXISTING);
-        }
     }
 
     public JsonObject analyze(File file) throws IOException, InterruptedException {
@@ -45,6 +39,11 @@ public class TensorflowAnalyzer implements AutoCloseable {
         }
     }
 
+    @Override
+    public void close() {
+        pyFile.toFile().delete();
+    }
+
     private Process createProcess(String file) throws IOException {
         String[] args = { BASH, "-c",
                 String.format("source \"%s/bin/activate\"; python3 \"%s\" \"%s\"", venv, pyFile, file) };
@@ -53,8 +52,9 @@ public class TensorflowAnalyzer implements AutoCloseable {
         return proc;
     }
 
-    @Override
-    public void close() {
-        pyFile.toFile().delete();
+    private void prepare() throws IOException {
+        try (InputStream in = getClass().getResourceAsStream(ANALYZER_PY)) {
+            Files.copy(in, pyFile, StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 }

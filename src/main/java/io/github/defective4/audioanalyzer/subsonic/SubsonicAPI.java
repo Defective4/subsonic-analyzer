@@ -16,24 +16,26 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
+
 public class SubsonicAPI {
-    private final String username;
-    private final char[] password;
     private static final String CLIENT_ID = "audio-analyzer";
-    private final MessageDigest md5;
-    private final HexFormat hex = HexFormat.of();
-    private final String baseURL;
     private static final String VERSION = "1.16.1";
+    private final String baseURL;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final HexFormat hex = HexFormat.of();
+    private final MessageDigest md5;
+    private final char[] password;
+    private final String username;
 
     public SubsonicAPI(String username, char[] password, String baseURL) throws MalformedURLException {
         this.username = username;
         this.password = password;
         try {
-            this.md5 = MessageDigest.getInstance("md5");
+            md5 = MessageDigest.getInstance("md5");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
@@ -41,11 +43,24 @@ public class SubsonicAPI {
         this.baseURL = baseURL + "/rest/";
     }
 
+    public SubsonicResponse getArtists() throws IOException {
+        return request("getArtists", Map.of());
+    }
+
     public void ping() throws IOException {
         request("ping", Map.of());
     }
 
-    private JsonObject request(String path, Map<String, Object> queryParameters) throws IOException {
+    private String computeToken(String salt) {
+        return hash(new String(password) + salt);
+    }
+
+    private String hash(String data) {
+        md5.reset();
+        return hex.formatHex(md5.digest(data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    private SubsonicResponse request(String path, Map<String, Object> queryParameters) throws IOException {
         HttpURLConnection con = null;
         try {
             Map<String, Object> params = new HashMap<>();
@@ -66,7 +81,9 @@ public class SubsonicAPI {
             con = (HttpURLConnection) URI.create(baseURL + path + queryString.substring(0, queryString.length() - 1))
                     .toURL().openConnection();
             try (Reader reader = new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8)) {
-                return JsonParser.parseReader(reader).getAsJsonObject();
+                JsonElement json = JsonParser.parseReader(reader).getAsJsonObject().get("subsonic-response");
+                System.out.println(gson.toJson(json));
+                return gson.fromJson(json, SubsonicResponse.class);
             }
         } finally {
             if (con != null) con.disconnect();
@@ -75,14 +92,5 @@ public class SubsonicAPI {
 
     private static String computeSalt() {
         return Long.toHexString(System.currentTimeMillis());
-    }
-
-    private String computeToken(String salt) {
-        return hash(new String(password) + salt);
-    }
-
-    private String hash(String data) {
-        md5.reset();
-        return hex.formatHex(md5.digest(data.getBytes(StandardCharsets.UTF_8)));
     }
 }
