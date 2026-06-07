@@ -1,11 +1,12 @@
 package io.github.defective4.audioanalyzer;
 
-import java.io.File;
+import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
 
 public class Main {
     public static void main(String[] args) {
-        try (TensorflowAnalyzer analyzer = new TensorflowAnalyzer("/opt/venv")){
-            System.out.println(analyzer.analyze(new File("/tmp/Fish.mp3")));
+        try {
+            SubsonicAPI api = new SubsonicAPI("navidrome", "navidrome".toCharArray(), "https://music.raspberry.local");
+            api.ping();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,0 +1,88 @@
+package io.github.defective4.audioanalyzer.subsonic;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.HexFormat;
+import java.util.Map;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+public class SubsonicAPI {
+    private final String username;
+    private final char[] password;
+    private static final String CLIENT_ID = "audio-analyzer";
+    private final MessageDigest md5;
+    private final HexFormat hex = HexFormat.of();
+    private final String baseURL;
+    private static final String VERSION = "1.16.1";
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    public SubsonicAPI(String username, char[] password, String baseURL) throws MalformedURLException {
+        this.username = username;
+        this.password = password;
+        try {
+            this.md5 = MessageDigest.getInstance("md5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        URI.create(baseURL).toURL();
+        this.baseURL = baseURL + "/rest/";
+    }
+
+    public void ping() throws IOException {
+        request("ping", Map.of());
+    }
+
+    private JsonObject request(String path, Map<String, Object> queryParameters) throws IOException {
+        HttpURLConnection con = null;
+        try {
+            Map<String, Object> params = new HashMap<>();
+            String salt = computeSalt();
+            params.put("u", username);
+            params.put("t", computeToken(salt));
+            params.put("s", salt);
+            params.put("v", VERSION);
+            params.put("c", CLIENT_ID);
+            params.put("f", "json");
+            params.putAll(queryParameters);
+            StringBuilder queryBuilder = new StringBuilder("?");
+            params.forEach((k, v) -> {
+                queryBuilder
+                        .append(String.format("%s=%s&", k, URLEncoder.encode(v.toString(), StandardCharsets.UTF_8)));
+            });
+            String queryString = queryBuilder.toString();
+            con = (HttpURLConnection) URI.create(baseURL + path + queryString.substring(0, queryString.length() - 1))
+                    .toURL().openConnection();
+            try (Reader reader = new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8)) {
+                return JsonParser.parseReader(reader).getAsJsonObject();
+            }
+        } finally {
+            if (con != null) con.disconnect();
+        }
+    }
+
+    private static String computeSalt() {
+        return Long.toHexString(System.currentTimeMillis());
+    }
+
+    private String computeToken(String salt) {
+        return hash(new String(password) + salt);
+    }
+
+    private String hash(String data) {
+        md5.reset();
+        return hex.formatHex(md5.digest(data.getBytes(StandardCharsets.UTF_8)));
+    }
+}
