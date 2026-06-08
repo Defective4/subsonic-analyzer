@@ -1,7 +1,7 @@
 package io.github.defective4.audioanalyzer;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -19,7 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.github.defective4.audioanalyzer.ml.Database;
+import io.github.defective4.audioanalyzer.ml.ModelLoader;
 import io.github.defective4.audioanalyzer.ml.TensorflowAnalyzer;
+import io.github.defective4.audioanalyzer.ml.model.AnalysisResponse;
+import io.github.defective4.audioanalyzer.ml.model.ModelMetadata;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
 import io.github.defective4.audioanalyzer.subsonic.model.Entity;
 
@@ -48,16 +51,21 @@ public class CLI {
     private final SubsonicAPI api;
     private final Database db;
     private final Logger logger = LoggerFactory.getLogger(CLI.class);
+    private final ModelLoader modelLoader;
 
     public CLI(String jdbcURL, String username, char[] password, String url, String analyzerURL)
-            throws SQLException, MalformedURLException {
+            throws SQLException, IOException {
         db = new Database(jdbcURL);
         api = new SubsonicAPI(username, password, url);
         analyzer = new TensorflowAnalyzer(analyzerURL);
+        modelLoader = new ModelLoader(Path.of("./models"));
+        logger.info("Loaded %s models with %s classes".formatted(modelLoader.getLoadedModels().size(),
+                modelLoader.getLoadedModels().values().stream().mapToInt(data -> data.classes().length).sum()));
     }
 
     private void index(boolean onlyNew) throws Exception {
         try {
+            Map<String, ModelMetadata> models = modelLoader.getLoadedModels();
             logger.info("Checking credentials...");
             api.ping();
             logger.info("Logged in successfully!");
@@ -77,7 +85,6 @@ public class CLI {
                     logger.info("%s is already in database, skipped.".formatted(song.title()));
                     continue;
                 }
-                System.err.println();
                 logger.info("Starting analysis of %s (%s) [%s/%s]...".formatted(song.title(), song.id(), i + 1,
                         songs.size()));
                 logger.info("Downloading %s...".formatted(song.id()));
@@ -88,9 +95,22 @@ public class CLI {
                         Files.copy(in, target);
                     }
                     logger.info("Analyzing %s...".formatted(song.id()));
-                    Map<String, Float> response = analyzer.requestAnalysis(target.toString());
+                    AnalysisResponse response = analyzer.requestAnalysis(target.toString());
                     logger.info("Storing results in database...");
-                    db.insertData(song, response);
+                    logger.info("Results for %s:".formatted(song.title()));
+                    int mood = response.mood();
+                    String moodName = models.get("moods").classes()[mood];
+                    int instrument = response.instrument();
+                    String instrumentName = models.get("instruments").classes()[instrument];
+                    int genre = response.genre();
+                    String genreName = models.get("genres").classes()[genre];
+
+                    logger.info(" Mood: %s".formatted(moodName));
+                    logger.info(" Instrument: %s".formatted(instrumentName));
+                    logger.info(" Genre: %s".formatted(genreName));
+                    System.err.println();
+                    db.insertData(song, response.scoreMap(), mood, moodName, instrument, instrumentName, genre,
+                            genreName);
                 } finally {
                     target.toFile().delete();
                 }

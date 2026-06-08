@@ -22,8 +22,14 @@ public class Database {
         try (Statement st = con.createStatement()) {
             st.execute("""
                     CREATE TABLE IF NOT EXISTS "moods" (
-                    	"trackId"	TEXT NOT NULL,
-                    	"trackName" TEXT NOT NULL,
+                    	"trackId"	      TEXT NOT NULL,
+                    	"trackName"       TEXT NOT NULL,
+                    	"mood"            INTEGER NOT NULL,
+                    	"moodName"        TEXT NOT NULL,
+                    	"instrument"      INTEGER NOT NULL,
+                    	"instrumentName"  TEXT NOT NULL,
+                    	"genre"           INTEGER NOT NULL,
+                    	"genreName"       TEXT NOT NULL,
                     	PRIMARY KEY("trackId")
                     )""");
         }
@@ -37,7 +43,8 @@ public class Database {
         return Collections.unmodifiableList(songs);
     }
 
-    public void insertData(Entity track, Map<String, Float> values) throws SQLException {
+    public void insertData(Entity track, Map<String, Float> values, int mood, String moodName, int instrument,
+            String instrumentName, int genre, String genreName) throws SQLException {
         List<String> columns = getColumns();
         for (Map.Entry<String, Float> entry : values.entrySet()) {
             String key = entry.getKey();
@@ -48,13 +55,19 @@ public class Database {
 
         List<Map.Entry<String, Float>> valList = new ArrayList<>(values.entrySet());
 
-        try (PreparedStatement st = con
-                .prepareStatement("insert or replace into `moods` (trackId, trackName, %s) values (?, ?, %s)".formatted(
-                        String.join(", ", valList.stream().map(e -> e.getKey()).toArray(String[]::new)),
-                        String.join(", ",
-                                valList.stream().map(e -> String.valueOf(e.getValue())).toArray(String[]::new))))) {
+        try (PreparedStatement st = con.prepareStatement(
+                "insert or replace into `moods` (trackId, trackName, mood, moodName, instrument, instrumentName, genre, genreName, %s) values (?, ?, ?, ?, ?, ?, ?, ?, %s)"
+                        .formatted(String.join(", ", valList.stream().map(e -> e.getKey()).toArray(String[]::new)),
+                                String.join(", ", valList.stream().map(e -> String.valueOf(e.getValue()))
+                                        .toArray(String[]::new))))) {
             st.setString(1, track.id());
             st.setString(2, track.title());
+            st.setInt(3, mood);
+            st.setString(4, moodName);
+            st.setInt(5, instrument);
+            st.setString(6, instrumentName);
+            st.setInt(7, genre);
+            st.setString(8, genreName);
             st.executeUpdate();
         }
     }
