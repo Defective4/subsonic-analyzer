@@ -45,7 +45,7 @@ public class SubsonicAPI {
             throw new IllegalStateException(e);
         }
         URI.create(baseURL).toURL();
-        this.baseURL = baseURL + "/rest/";
+        this.baseURL = baseURL + "rest/";
     }
 
     public InputStream download(Entity entity) throws IOException {
@@ -81,8 +81,8 @@ public class SubsonicAPI {
         return request("getMusicDirectory", Map.of("id", id));
     }
 
-    public void ping() throws IOException {
-        request("ping", Map.of());
+    public SubsonicResponse ping() throws IOException {
+        return request("ping", Map.of());
     }
 
     private String computeToken(String salt) {
@@ -118,7 +118,10 @@ public class SubsonicAPI {
             con = (HttpURLConnection) URI.create(baseURL + path + queryString).toURL().openConnection();
             try (Reader reader = new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8)) {
                 JsonElement json = JsonParser.parseReader(reader).getAsJsonObject().get("subsonic-response");
-                return gson.fromJson(json, SubsonicResponse.class);
+                SubsonicResponse response = gson.fromJson(json, SubsonicResponse.class);
+                if (response.error() != null) throw new IOException(
+                        "Error %s: %s".formatted(response.error().code(), response.error().message()));
+                return response;
             }
         } finally {
             if (con != null) con.disconnect();

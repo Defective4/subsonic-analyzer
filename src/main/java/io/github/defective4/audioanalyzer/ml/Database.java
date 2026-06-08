@@ -16,7 +16,7 @@ public class Database {
 
     public Database(String jdbcURL) throws SQLException {
         con = DriverManager.getConnection(jdbcURL);
-        con.setAutoCommit(false);
+        con.setAutoCommit(true);
         try (Statement st = con.createStatement()) {
             st.execute("""
                     CREATE TABLE IF NOT EXISTS "moods" (
@@ -24,11 +24,6 @@ public class Database {
                     	PRIMARY KEY("trackId")
                     )""");
         }
-        con.commit();
-    }
-
-    public void commit() throws SQLException {
-        con.commit();
     }
 
     public void insertData(String track, Map<String, Float> values) throws SQLException {
@@ -37,7 +32,6 @@ public class Database {
             String key = entry.getKey();
             if (!columns.contains(key)) {
                 insertColumn(key);
-                commit();
             }
         }
 
