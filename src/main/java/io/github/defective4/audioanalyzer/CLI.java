@@ -31,6 +31,8 @@ public class CLI {
     private static final Options options = new Options()
             .addOption(Option.builder("h").desc("Display this help section").longOpt("help").build())
             .addOption(Option.builder("a").desc("(re)analyze music database").longOpt("analyze").build())
+            .addOption(Option.builder("n").desc("Only analyze tracks that are not present in the database")
+                    .longOpt("only-new").build())
             .addOption(Option.builder("j").desc("JDBC URL for the database (default " + DEFAULT_JDBC + ")")
                     .longOpt("jdbc").numberOfArgs(1).argName("url").build())
             .addOption(Option.builder("u").desc("Subsonic username (Required)").longOpt("user").numberOfArgs(1)
@@ -54,7 +56,7 @@ public class CLI {
         analyzer = new TensorflowAnalyzer(analyzerURL);
     }
 
-    private void index() throws Exception {
+    private void index(boolean onlyNew) throws Exception {
         try {
             logger.info("Checking credentials...");
             api.ping();
@@ -64,11 +66,17 @@ public class CLI {
             logger.info("Downloaded information about %s songs".formatted(songs.size()));
             logger.info("Starting analysis...");
 
+            List<String> ignore = onlyNew ? db.getAllSongs() : List.of();
+
             Path tmpDir = Files.createTempDirectory("e-analysis-");
             tmpDir.toFile().deleteOnExit();
 
             for (int i = 0; i < songs.size(); i++) {
                 Entity song = songs.get(i);
+                if (ignore.contains(song.id())) {
+                    logger.info("%s is already in database, skipped.".formatted(song.title()));
+                    continue;
+                }
                 System.err.println();
                 logger.info("Starting analysis of %s (%s) [%s/%s]...".formatted(song.title(), song.id(), i + 1,
                         songs.size()));
@@ -107,7 +115,7 @@ public class CLI {
 
             CLI prog = new CLI(jdbc, user, password.toCharArray(), subsonicURL, essentiaURL);
             if (cli.hasOption('a')) {
-                prog.index();
+                prog.index(cli.hasOption('n'));
                 return;
             }
             System.err.println("One of --analyze is required");

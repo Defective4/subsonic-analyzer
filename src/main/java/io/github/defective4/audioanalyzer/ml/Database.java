@@ -29,6 +29,14 @@ public class Database {
         }
     }
 
+    public List<String> getAllSongs() throws SQLException {
+        List<String> songs = new ArrayList<>();
+        try (Statement st = con.createStatement(); ResultSet set = st.executeQuery("select trackId from `moods`")) {
+            while (set.next()) songs.add(set.getString(1));
+        }
+        return Collections.unmodifiableList(songs);
+    }
+
     public void insertData(Entity track, Map<String, Float> values) throws SQLException {
         List<String> columns = getColumns();
         for (Map.Entry<String, Float> entry : values.entrySet()) {
