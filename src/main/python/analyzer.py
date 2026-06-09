@@ -4,6 +4,43 @@ from os import listdir
 from fastapi import FastAPI
 api = FastAPI()
 
+moodRoot = "./models/mood/"
+otherRoot = "./models/other/"
+
+rootModel = TensorflowPredictEffnetDiscogs(
+    graphFilename="./models/discogs-effnet-bs64-1.pb",
+    output="PartitionedCall:1")
+
+instrumentModel = TensorflowPredict2D(graphFilename=otherRoot+"mtg_jamendo_instrument-discogs-effnet-1.pb",
+                                      input="model/Placeholder",
+                                      output="model/Sigmoid"
+                                      )
+moodModel = TensorflowPredict2D(graphFilename=otherRoot+"mtg_jamendo_moodtheme-discogs-effnet-1.pb",
+                                input="model/Placeholder",
+                                output="model/Sigmoid"
+                                )
+
+genreModel = TensorflowPredict2D(
+    graphFilename=otherRoot+"genre_discogs400-discogs-effnet-1.pb",
+    input="serving_default_model_Placeholder",
+    output="PartitionedCall"
+)
+
+models = listdir(moodRoot)
+invertedModels = ["mood_happy-discogs-effnet-1.pb",
+                  "mood_aggressive-discogs-effnet-1.pb",
+                  "danceability-discogs-effnet-1.pb",
+                  "mood_electronic-discogs-effnet-1.pb"]
+
+submodels = {
+
+}
+
+for model in models:
+    submodels[model] = TensorflowPredict2D(
+        graphFilename=moodRoot+"/"+model,
+        output="model/Softmax")
+
 
 @api.get("/ping")
 def ping():
@@ -12,19 +49,9 @@ def ping():
 
 @api.get("/analyze")
 def analyze(audioPath: str):
-    moodRoot = "./models/mood/"
-    otherRoot = "./models/other/"
-    models = listdir(moodRoot)
 
-    invertedModels = ["mood_happy-discogs-effnet-1.pb",
-                      "mood_aggressive-discogs-effnet-1.pb",
-                      "danceability-discogs-effnet-1.pb",
-                      "mood_electronic-discogs-effnet-1.pb"
-                      ]
     audio = MonoLoader(sampleRate=16000, filename=audioPath)()
-    ebModel = TensorflowPredictEffnetDiscogs(
-        graphFilename="./models/discogs-effnet-bs64-1.pb",
-        output="PartitionedCall:1")(audio)
+    ebModel = rootModel(audio)
     modelScores = {
         "scores": {
         },
@@ -33,33 +60,21 @@ def analyze(audioPath: str):
         "genres": []
     }
     for model in models:
-        score = round(float(np.mean(TensorflowPredict2D(
-            graphFilename=moodRoot+"/"+model,
-            output="model/Softmax")(ebModel)[:, 1])),
-            4)
+        score = round(float(np.mean(submodels[model](ebModel)[:, 1])),
+                      4)
         if model in invertedModels:
             score = round(1-score, 4)
         modelScores["scores"][model] = score
 
-    predictions = np.mean(TensorflowPredict2D(graphFilename=otherRoot+"mtg_jamendo_instrument-discogs-effnet-1.pb",
-                                              input="model/Placeholder",
-                                              output="model/Sigmoid"
-                                              )(ebModel), axis=0)
+    predictions = np.mean(instrumentModel(ebModel), axis=0)
     for val in predictions:
         modelScores["instruments"].append(float(val))
 
-    predictions = np.mean(TensorflowPredict2D(graphFilename=otherRoot+"mtg_jamendo_moodtheme-discogs-effnet-1.pb",
-                                              input="model/Placeholder",
-                                              output="model/Sigmoid"
-                                              )(ebModel), axis=0)
+    predictions = np.mean(moodModel(ebModel), axis=0)
     for val in predictions:
         modelScores["moods"].append(float(val))
 
-    predictions = np.mean(TensorflowPredict2D(
-        graphFilename=otherRoot+"genre_discogs400-discogs-effnet-1.pb",
-        input="serving_default_model_Placeholder",
-        output="PartitionedCall"
-    )(ebModel), axis=0)
+    predictions = np.mean(genreModel(ebModel), axis=0)
     for val in predictions:
         modelScores["genres"].append(float(val))
 
