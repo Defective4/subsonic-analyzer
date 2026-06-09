@@ -25,7 +25,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import io.github.defective4.audioanalyzer.subsonic.model.AlbumList;
 import io.github.defective4.audioanalyzer.subsonic.model.Entity;
+import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
+import io.github.defective4.audioanalyzer.subsonic.model.SongList;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 
 public class SubsonicAPI {
@@ -50,12 +53,16 @@ public class SubsonicAPI {
         this.baseURL = baseURL + "rest/";
     }
 
+    public Playlist createPlaylist(String name) throws IOException {
+        return request("createPlaylist", Map.of("name", name)).playlist();
+    }
+
     public InputStream download(Entity entity) throws IOException {
         return URI.create(baseURL + "download" + constructQueryString(Map.of("id", entity.id()))).toURL().openStream();
     }
 
-    public SubsonicResponse getAlbumList(int limit, int offset) throws IOException {
-        return request("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset));
+    public AlbumList getAlbumList(int limit, int offset) throws IOException {
+        return request("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset)).albumList();
     }
 
     public List<Entity> getAllAlbums(Logger logger) throws IOException {
@@ -63,7 +70,7 @@ public class SubsonicAPI {
         int offset = 0;
         int i = 0;
         while (true) {
-            Entity[] as = getAlbumList(500, offset).albumList().album();
+            Entity[] as = getAlbumList(500, offset).album();
             logger.info("Downloaded chunk %s".formatted(++i));
             Collections.addAll(albums, as);
             if (as.length == 500)
@@ -80,13 +87,13 @@ public class SubsonicAPI {
         int i = 0;
         for (Entity album : albums) {
             if (++i % 100 == 0) logger.info("Downloaded metadata for %s out of %s albums".formatted(i, albums.size()));
-            Collections.addAll(songs, getMusicDirectory(album.id()).directory().child());
+            Collections.addAll(songs, getMusicDirectory(album.id()).child());
         }
         return Collections.unmodifiableList(songs);
     }
 
-    public SubsonicResponse getMusicDirectory(String id) throws IOException {
-        return request("getMusicDirectory", Map.of("id", id));
+    public SongList getMusicDirectory(String id) throws IOException {
+        return request("getMusicDirectory", Map.of("id", id)).directory();
     }
 
     public SubsonicResponse ping() throws IOException {
