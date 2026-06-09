@@ -51,7 +51,6 @@ public class CLI {
     private final SubsonicAPI api;
     private final Database db;
     private final Logger logger = LoggerFactory.getLogger(CLI.class);
-    private final ModelLoader modelLoader;
 
     public CLI(String jdbcURL, String username, char[] password, String url, String analyzerURL)
             throws SQLException, IOException {
@@ -61,13 +60,11 @@ public class CLI {
         logger.info("Pinging analyzer server...");
         analyzer.ping();
         logger.info("Analyzer server OK");
-        modelLoader = new ModelLoader(Path.of("./models/other"));
-        logger.info("Loaded %s models with %s classes".formatted(modelLoader.getLoadedModels().size(),
-                modelLoader.getLoadedModels().values().stream().mapToInt(data -> data.classes().length).sum()));
     }
 
     private void index(boolean onlyNew) throws Exception {
         try {
+            ModelLoader modelLoader = new ModelLoader(Path.of("./models/other"), logger);
             Map<String, ModelMetadata> models = modelLoader.getLoadedModels();
             logger.info("Checking credentials...");
             api.ping();
@@ -101,19 +98,15 @@ public class CLI {
                     AnalysisResponse response = analyzer.requestAnalysis(target.toString());
                     logger.info("Storing results in database...");
                     logger.info("Results for %s:".formatted(song.title()));
-                    int mood = response.mood();
-                    String moodName = models.get("moods").classes()[mood];
-                    int instrument = response.instrument();
-                    String instrumentName = models.get("instruments").classes()[instrument];
-                    int genre = response.genre();
-                    String genreName = models.get("genres").classes()[genre];
+                    String moodName = models.get("moods").classes()[response.mood()];
+                    String instrumentName = models.get("instruments").classes()[response.instrument()];
+                    String genreName = models.get("genres").classes()[response.genre()];
 
                     logger.info(" Mood: %s".formatted(moodName));
                     logger.info(" Instrument: %s".formatted(instrumentName));
                     logger.info(" Genre: %s".formatted(genreName));
                     System.err.println();
-                    db.insertData(song, response.scoreMap(), mood, moodName, instrument, instrumentName, genre,
-                            genreName);
+                    db.insertData(song, response.scoreMap(), moodName, instrumentName, genreName);
                 } catch (IOException e) {
                     e.printStackTrace();
                     continue;
@@ -142,7 +135,7 @@ public class CLI {
 
             CLI prog = new CLI(jdbc, user, password.toCharArray(), subsonicURL, essentiaURL);
             if (cli.hasOption('a')) {
-                prog.index(cli.hasOption('n'));
+                prog.index(!cli.hasOption('n'));
                 return;
             }
             System.err.println("One of --analyze is required");

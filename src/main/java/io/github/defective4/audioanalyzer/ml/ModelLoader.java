@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+
 import com.google.gson.Gson;
 
 import io.github.defective4.audioanalyzer.ml.model.ModelMetadata;
@@ -22,7 +24,7 @@ public class ModelLoader {
     private final Gson gson = new Gson();
     private final Map<String, ModelMetadata> loadedModels = new HashMap<>();
 
-    public ModelLoader(Path modelsPath) throws IOException {
+    public ModelLoader(Path modelsPath, Logger logger) throws IOException {
         for (Entry<String, String> entry : AVAILABLE_MODELS.entrySet()) {
             try (Reader reader = new InputStreamReader(
                     Files.newInputStream(Path.of(modelsPath.toString(), entry.getValue())),
@@ -30,6 +32,8 @@ public class ModelLoader {
                 loadedModels.put(entry.getKey(), gson.fromJson(reader, ModelMetadata.class));
             }
         }
+        logger.info("Loaded %s models with %s classes".formatted(getLoadedModels().size(),
+                getLoadedModels().values().stream().mapToInt(data -> data.classes().length).sum()));
     }
 
     public Map<String, ModelMetadata> getLoadedModels() {
