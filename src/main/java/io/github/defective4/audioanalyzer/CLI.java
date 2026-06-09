@@ -34,7 +34,7 @@ public class CLI {
     private static final Options options = new Options()
             .addOption(Option.builder("h").desc("Display this help section").longOpt("help").build())
             .addOption(Option.builder("a").desc("(re)analyze music database").longOpt("analyze").build())
-            .addOption(Option.builder("n").desc("Only analyze tracks that are not present in the database")
+            .addOption(Option.builder("n").desc("Analyze all tracks, even if they are present in the database")
                     .longOpt("only-new").build())
             .addOption(Option.builder("j").desc("JDBC URL for the database (default " + DEFAULT_JDBC + ")")
                     .longOpt("jdbc").numberOfArgs(1).argName("url").build())

@@ -7,3 +7,4 @@
 *.sqlite
 /dependency-reduced-pom.xml
 /__pycache__/
+/*.bak
