@@ -46,7 +46,7 @@ public class App {
     public void groupTracks() throws SQLException {
         // checkAPI();
         int limit = 30;
-        String id = "エキストラ·ヒーロー";
+        String id = "34ynLUJY8ua4uPm0Rizznu";
         String mood = null;
         String instrument = null;
         String genre = null;
@@ -54,7 +54,7 @@ public class App {
         Optional<Track> baseOp = Optional.empty();
 //        baseOp = db.getTrackById(id);
 //        if (!baseOp.isPresent()) {
-//            logger.error("Track with id or name %s does not exist.");
+//            logger.error("Track with id or name %s does not exist.".formatted(id));
 //            return;
 //        }
 
