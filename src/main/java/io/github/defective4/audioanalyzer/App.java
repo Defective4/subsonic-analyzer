@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,26 +58,37 @@ public class App {
         Collections.shuffle(tracks, random);
         Stream<Track> stream = tracks.stream();
         if (moodFilter != null) {
+            Set<String> set = tracks.stream().map(Track::mood).collect(Collectors.toUnmodifiableSet());
             if (moodFilter.equalsIgnoreCase("?list")) {
                 logger.info("Available moods:");
-                stream.map(Track::mood).collect(Collectors.toUnmodifiableSet()).forEach(s -> logger.info(" - " + s));
+                set.forEach(s -> logger.info(" - " + s));
+                return;
+            } else if (!set.contains(moodFilter)) {
+                logger.error("Mood {} does not exist", moodFilter);
                 return;
             }
             stream = stream.filter(t -> t.mood().equalsIgnoreCase(moodFilter));
         }
         if (instrumentFilter != null) {
+            Set<String> set = tracks.stream().map(Track::instrument).collect(Collectors.toUnmodifiableSet());
             if (instrumentFilter.equalsIgnoreCase("?list")) {
                 logger.info("Available instruments:");
-                stream.map(Track::instrument).collect(Collectors.toUnmodifiableSet())
-                        .forEach(s -> logger.info(" - " + s));
+                set.forEach(s -> logger.info(" - " + s));
+                return;
+            } else if (!set.contains(instrumentFilter)) {
+                logger.error("Instrument {} does not exist", instrumentFilter);
                 return;
             }
             stream = stream.filter(t -> t.instrument().equalsIgnoreCase(instrumentFilter));
         }
         if (genreFilter != null) {
+            Set<String> set = tracks.stream().map(Track::genre).collect(Collectors.toUnmodifiableSet());
             if (genreFilter.equalsIgnoreCase("?list")) {
                 logger.info("Available genres:");
-                stream.map(Track::genre).collect(Collectors.toUnmodifiableSet()).forEach(s -> logger.info(" - " + s));
+                set.forEach(s -> logger.info(" - " + s));
+                return;
+            } else if (!set.contains(genreFilter)) {
+                logger.error("Genre {} does not exist", genreFilter);
                 return;
             }
             stream = stream.filter(t -> t.genre().equalsIgnoreCase(genreFilter));
