@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -50,6 +51,35 @@ public class App {
             throws SQLException, IOException {
         checkAPI();
 
+        List<Track> tracks = new ArrayList<>(db.getAllTracks());
+        Collections.shuffle(tracks, random);
+        Stream<Track> stream = tracks.stream();
+        if (moodFilter != null) {
+            if (moodFilter.equalsIgnoreCase("?list")) {
+                logger.info("Available moods:");
+                stream.map(Track::mood).collect(Collectors.toUnmodifiableSet()).forEach(s -> logger.info(" - " + s));
+                return;
+            }
+            stream = stream.filter(t -> t.mood().equalsIgnoreCase(moodFilter));
+        }
+        if (instrumentFilter != null) {
+            if (instrumentFilter.equalsIgnoreCase("?list")) {
+                logger.info("Available instruments:");
+                stream.map(Track::instrument).collect(Collectors.toUnmodifiableSet())
+                        .forEach(s -> logger.info(" - " + s));
+                return;
+            }
+            stream = stream.filter(t -> t.instrument().equalsIgnoreCase(instrumentFilter));
+        }
+        if (genreFilter != null) {
+            if (genreFilter.equalsIgnoreCase("?list")) {
+                logger.info("Available genres:");
+                stream.map(Track::genre).collect(Collectors.toUnmodifiableSet()).forEach(s -> logger.info(" - " + s));
+                return;
+            }
+            stream = stream.filter(t -> t.genre().equalsIgnoreCase(genreFilter));
+        }
+
         Optional<Track> baseOp = Optional.empty();
         if (baseSong != null) {
             try {
@@ -63,13 +93,6 @@ public class App {
                 return;
             }
         }
-
-        List<Track> tracks = new ArrayList<>(db.getAllTracks());
-        Collections.shuffle(tracks, random);
-        Stream<Track> stream = tracks.stream();
-        if (moodFilter != null) stream = stream.filter(t -> t.mood().equalsIgnoreCase(moodFilter));
-        if (instrumentFilter != null) stream = stream.filter(t -> t.instrument().equalsIgnoreCase(instrumentFilter));
-        if (genreFilter != null) stream = stream.filter(t -> t.genre().equalsIgnoreCase(genreFilter));
 
         if (baseOp.isPresent()) {
             Track base = baseOp.get();
