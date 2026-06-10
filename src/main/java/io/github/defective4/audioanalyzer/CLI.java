@@ -130,7 +130,9 @@ public class CLI {
             System.err.println(e.getMessage());
         }
 
-        new HelpFormatter().printHelp("%s %s [options]".formatted(
+        HelpFormatter hf = new HelpFormatter();
+        hf.setWidth((int) (HelpFormatter.DEFAULT_WIDTH * 1.5));
+        hf.printHelp("%s %s [options]".formatted(
                 Path.of(CLI.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getFileName(),
                 args[0]), options);
         System.exit(2);
