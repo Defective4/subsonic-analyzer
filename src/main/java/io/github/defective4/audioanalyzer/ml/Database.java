@@ -65,9 +65,10 @@ public class Database {
             st.setString(2, idOrName);
             try (ResultSet set = st.executeQuery()) {
                 if (set.next()) {
+                    Optional<Track> of = Optional.of(trackFromResultSet(set, cols));
                     if (set.next())
                         throw new IllegalStateException("There is more than one track with name " + idOrName);
-                    return Optional.of(trackFromResultSet(set, cols));
+                    return of;
                 }
                 return Optional.empty();
             }

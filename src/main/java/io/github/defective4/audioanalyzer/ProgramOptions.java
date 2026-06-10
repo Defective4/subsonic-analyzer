@@ -17,9 +17,23 @@ public class ProgramOptions {
     public static final Option PLS_NAME_OPTION;
     public static final Option PLS_PUBLIC_OPTION;
     public static final Option PLS_REPLACE_OPTION;
+    public static final Option PLS_SIMILAR_GENRE_OPTION;
+    public static final Option PLS_SIMILAR_INSTRUMENT_OPTION;
+    public static final Option PLS_SIMILAR_MOOD_OPTION;
     public static final Option PLS_SIMILAR_SONG_OPTION;
 
     static {
+
+        PLS_SIMILAR_GENRE_OPTION = Option.builder().longOpt("similar-song-same-genre").desc(
+                "If enabled, and --similar-song is used, only songs with the same genre as the base will be matched.")
+                .build();
+        PLS_SIMILAR_INSTRUMENT_OPTION = Option.builder().longOpt("similar-song-same-instrument").desc(
+                "If enabled, and --similar-song is used, only songs with the same instrument as the base will be matched.")
+                .build();
+        PLS_SIMILAR_MOOD_OPTION = Option.builder().longOpt("similar-song-same-mood").desc(
+                "If enabled, and --similar-song is used, only songs with the same mood as the base will be matched.")
+                .build();
+
         AN_TENSORFLOW = Option.builder("t").desc("Essentia analyzer URL (Default " + DEFAULT_ESSENTIA + ")")
                 .numberOfArgs(1).argName("url").build();
         AN_ALL = Option.builder("a").desc("Analyze all tracks, even if they are present in the database").longOpt("all")
@@ -38,8 +52,8 @@ public class ProgramOptions {
                 .desc("Filter songs based on their mood. Pass ?list to list available moods").build();
         PLS_NAME_OPTION = Option.builder().longOpt("playlist-name").numberOfArgs(1).argName("name")
                 .desc("Human readable name of the new playlist. Required if --replace-playlist is not used").build();
-        PLS_PUBLIC_OPTION = Option.builder().argName("true|false").numberOfArgs(1).longOpt("public")
-                .desc("If true, the NEW playlist will be public").converter(Boolean::parseBoolean).build();
+        PLS_PUBLIC_OPTION = Option.builder().longOpt("public").desc("If present, the NEW playlist will be public")
+                .build();
         PLS_REPLACE_OPTION = Option.builder().longOpt("replace-playlist").numberOfArgs(1).argName("id").desc(
                 "Replace an existing playlist instead of creating a new one. This will remove all songs from an existing playlist in favor of new ones.")
                 .build();

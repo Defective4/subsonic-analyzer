@@ -48,8 +48,8 @@ public class App {
     }
 
     public void groupTracks(String baseSong, String moodFilter, String instrumentFilter, String genreFilter,
-            String playlistName, String replacePlaylist, int limit, boolean newPublic)
-            throws SQLException, IOException {
+            String playlistName, String replacePlaylist, int limit, boolean newPublic, boolean similarGenre,
+            boolean similarMood, boolean similarInstrument) throws SQLException, IOException {
         checkAPI();
 
         logger.info("Getting tracks from the database...");
@@ -57,7 +57,7 @@ public class App {
         logger.info("Loaded {} tracks", tracks.size());
         Collections.shuffle(tracks, random);
         Stream<Track> stream = tracks.stream();
-        if (moodFilter != null) {
+        if (moodFilter != null && similarMood) {
             Set<String> set = tracks.stream().map(Track::mood).collect(Collectors.toUnmodifiableSet());
             if (moodFilter.equalsIgnoreCase("?list")) {
                 logger.info("Available moods:");
@@ -69,7 +69,7 @@ public class App {
             }
             stream = stream.filter(t -> t.mood().equalsIgnoreCase(moodFilter));
         }
-        if (instrumentFilter != null) {
+        if (instrumentFilter != null && !similarInstrument) {
             Set<String> set = tracks.stream().map(Track::instrument).collect(Collectors.toUnmodifiableSet());
             if (instrumentFilter.equalsIgnoreCase("?list")) {
                 logger.info("Available instruments:");
@@ -81,7 +81,7 @@ public class App {
             }
             stream = stream.filter(t -> t.instrument().equalsIgnoreCase(instrumentFilter));
         }
-        if (genreFilter != null) {
+        if (genreFilter != null && !similarGenre) {
             Set<String> set = tracks.stream().map(Track::genre).collect(Collectors.toUnmodifiableSet());
             if (genreFilter.equalsIgnoreCase("?list")) {
                 logger.info("Available genres:");
@@ -115,7 +115,10 @@ public class App {
                 double diff = calculateSimilarity(t1, base) - calculateSimilarity(t2, base);
                 return diff < 0 ? -1 : diff > 0 ? 1 : 0;
             });
-            stream = stream.filter(track -> !track.id().equals(base.id()));
+            if (similarGenre) stream = stream.filter(track -> track.genre().equals(base.genre()));
+            if (similarInstrument) stream = stream.filter(track -> track.instrument().equals(base.instrument()));
+            if (similarMood) stream = stream.filter(track -> track.mood().equals(base.mood()));
+//            stream = stream.filter(track -> !track.id().equals(base.id()));
         }
 
         List<Track> similar = new ArrayList<>(stream.limit(limit).toList());

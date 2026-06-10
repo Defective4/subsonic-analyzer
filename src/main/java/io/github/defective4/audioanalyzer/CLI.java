@@ -53,14 +53,17 @@ public class CLI {
             String playlistName = cli.getOptionValue(PLS_NAME_OPTION);
             String replacePlaylist = cli.getOptionValue(PLS_REPLACE_OPTION, () -> null);
             int limit = cli.getParsedOptionValue(PLS_LIMIT_OPTION, DEFAULT_LIMIT);
-            boolean newPublic = cli.getParsedOptionValue(PLS_PUBLIC_OPTION, true);
+            boolean newPublic = cli.hasOption(PLS_PUBLIC_OPTION);
 
             if (replacePlaylist == null && playlistName == null) {
                 System.err.println("Missing playlist name");
                 return false;
             }
-
-            prog.groupTracks(song, mood, instrument, genre, playlistName, replacePlaylist, limit, newPublic);
+            boolean similarGenre = cli.hasOption(PLS_SIMILAR_GENRE_OPTION);
+            boolean similarMood = cli.hasOption(PLS_SIMILAR_MOOD_OPTION);
+            boolean similarInstrument = cli.hasOption(PLS_SIMILAR_INSTRUMENT_OPTION);
+            prog.groupTracks(song, mood, instrument, genre, playlistName, replacePlaylist, limit, newPublic,
+                    similarGenre, similarMood, similarInstrument);
             return true;
         }
 
@@ -94,7 +97,8 @@ public class CLI {
         PLAYLIST_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(PLS_NAME_OPTION)
                 .addOption(PLS_GENRE_FILTER_OPTION).addOption(PLS_INSTRUMENT_FILTER_OPTION).addOption(PLS_LIMIT_OPTION)
                 .addOption(PLS_MOOD_FILTER_OPTION).addOption(PLS_PUBLIC_OPTION).addOption(PLS_REPLACE_OPTION)
-                .addOption(PLS_SIMILAR_SONG_OPTION);
+                .addOption(PLS_SIMILAR_SONG_OPTION).addOption(PLS_SIMILAR_GENRE_OPTION)
+                .addOption(PLS_SIMILAR_MOOD_OPTION).addOption(PLS_SIMILAR_INSTRUMENT_OPTION);
     }
 
     public static void main(String[] args) throws Exception {
