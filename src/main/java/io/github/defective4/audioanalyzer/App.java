@@ -51,7 +51,9 @@ public class App {
             throws SQLException, IOException {
         checkAPI();
 
+        logger.info("Getting tracks from the database...");
         List<Track> tracks = new ArrayList<>(db.getAllTracks());
+        logger.info("Loaded {} tracks", tracks.size());
         Collections.shuffle(tracks, random);
         Stream<Track> stream = tracks.stream();
         if (moodFilter != null) {
@@ -94,6 +96,7 @@ public class App {
             }
         }
 
+        logger.info("Finding matching tracks...");
         if (baseOp.isPresent()) {
             Track base = baseOp.get();
             stream = stream.sorted((t1, t2) -> {
@@ -103,8 +106,10 @@ public class App {
             stream = stream.filter(track -> !track.id().equals(base.id()));
         }
 
-        List<Track> similar = stream.limit(limit).toList();
+        List<Track> similar = new ArrayList<>(stream.limit(limit).toList());
+        Collections.shuffle(similar);
 
+        logger.info("Updating playlist...");
         Playlist playlist;
         boolean pub;
         if (replacePlaylist != null) {
@@ -125,7 +130,9 @@ public class App {
             pub = newPublic;
             api.updatePlaylist(playlist.id(), null, -1, pub);
         }
+        logger.info("Adding songs to the playlist...");
         for (Track t : similar) api.updatePlaylist(playlist.id(), t.id(), -1, pub);
+        logger.info("Added {} songs to playlist {}!", similar.size(), playlist.name());
     }
 
     public void index(boolean onlyNew) throws Exception {
