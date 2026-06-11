@@ -2,6 +2,8 @@ package io.github.defective4.audioanalyzer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +23,12 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import io.github.defective4.audioanalyzer.expr.IntegerExpression;
+import io.github.defective4.audioanalyzer.format.MarkdownTableWriter;
+import io.github.defective4.audioanalyzer.format.PrintFormat;
 import io.github.defective4.audioanalyzer.ml.ModelLoader;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.TensorflowAnalyzer;
@@ -46,7 +53,7 @@ public class App {
             throws SQLException, IOException {
         this.analyzerURL = analyzerURL;
         db = new Repository("jdbc:sqlite:" + dbFile);
-        api = username!=null ? new SubsonicAPI(username, password, url) : null;
+        api = username != null ? new SubsonicAPI(username, password, url) : null;
     }
 
     public void groupTracks(String baseSong, String moodFilter, String instrumentFilter, String genreFilter,
@@ -228,8 +235,24 @@ public class App {
         }
     }
 
-    public void printSongs(PrintFormat printFormat) {
-
+    public void printSongs(PrintFormat printFormat) throws SQLException, IOException {
+        List<Track> tracks = db.getAllTracks();
+        try (Writer writer = new OutputStreamWriter(System.out)) {
+            switch (printFormat) {
+                case JSON -> { new Gson().toJson(tracks, writer); }
+                case JSON_PRETTY -> { new GsonBuilder().setPrettyPrinting().create().toJson(tracks, writer); }
+                case MARKDOWN -> {
+                    try (MarkdownTableWriter md = new MarkdownTableWriter(writer,
+                            new String[] { "Id", "Name", "Mood", "Instrument", "Genre", "BPM" })) {
+                        md.writeLines(tracks
+                                .stream().map(track -> new String[] { track.id(), track.name(), track.mood(),
+                                        track.instrument(), track.genre(), Integer.toString(track.bpm()) })
+                                .toArray(String[][]::new));
+                    }
+                }
+                default -> throw new IllegalArgumentException("Unknown print format");
+            }
+        }
     }
 
     private void checkAPI() throws IOException {

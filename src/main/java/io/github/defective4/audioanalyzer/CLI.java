@@ -14,6 +14,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import io.github.defective4.audioanalyzer.expr.IntegerExpression;
+import io.github.defective4.audioanalyzer.format.PrintFormat;
 
 public class CLI {
 

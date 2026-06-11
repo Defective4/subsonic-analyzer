@@ -6,6 +6,7 @@ import org.apache.commons.cli.Option;
 
 import io.github.defective4.audioanalyzer.expr.EnumConverter;
 import io.github.defective4.audioanalyzer.expr.IntegerExpressionConverter;
+import io.github.defective4.audioanalyzer.format.PrintFormat;
 
 public class ProgramOptions {
 
