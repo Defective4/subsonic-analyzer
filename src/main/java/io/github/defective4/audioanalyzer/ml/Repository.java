@@ -130,8 +130,9 @@ public class Repository {
         String mood = set.getString(++i);
         String instrument = set.getString(++i);
         String genre = set.getString(++i);
+        int bpm = set.getInt(++i);
         Map<String, Float> scores = new HashMap<>();
         for (String column : cols) scores.put(column, set.getFloat(column));
-        return new Track(id, name, mood, instrument, genre, Collections.unmodifiableMap(scores));
+        return new Track(id, name, mood, instrument, genre, Collections.unmodifiableMap(scores), bpm);
     }
 }

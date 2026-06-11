@@ -62,8 +62,9 @@ public class CLI {
             boolean similarGenre = cli.hasOption(PLS_SIMILAR_GENRE_OPTION);
             boolean similarMood = cli.hasOption(PLS_SIMILAR_MOOD_OPTION);
             boolean similarInstrument = cli.hasOption(PLS_SIMILAR_INSTRUMENT_OPTION);
+            boolean tempo = cli.hasOption(PLS_SIMILAR_INCLUDE_BPM);
             prog.groupTracks(song, mood, instrument, genre, playlistName, replacePlaylist, limit, newPublic,
-                    similarGenre, similarMood, similarInstrument);
+                    similarGenre, similarMood, similarInstrument, tempo);
             return true;
         }
 
@@ -84,9 +85,9 @@ public class CLI {
 
         COMMON_OPTIONS = new Options()
                 .addOption(Option.builder("h").desc("Display this help section").longOpt("help").build())
-                .addOption(Option.builder("d")
-                        .desc("SQLite database location (default " + ProgramOptions.DEFAULT_DB + ")").longOpt("db")
-                        .numberOfArgs(1).argName("file").build())
+                .addOption(
+                        Option.builder("d").desc("SQLite database location (default " + ProgramOptions.DEFAULT_DB + ")")
+                                .longOpt("db").numberOfArgs(1).argName("file").build())
                 .addOption(Option.builder("u").desc("Subsonic username (Required)").longOpt("user").numberOfArgs(1)
                         .argName("username").required().build())
                 .addOption(Option.builder("p").desc("Subsonic password (Required)").longOpt("password").numberOfArgs(1)
@@ -98,7 +99,8 @@ public class CLI {
                 .addOption(PLS_GENRE_FILTER_OPTION).addOption(PLS_INSTRUMENT_FILTER_OPTION).addOption(PLS_LIMIT_OPTION)
                 .addOption(PLS_MOOD_FILTER_OPTION).addOption(PLS_PUBLIC_OPTION).addOption(PLS_REPLACE_OPTION)
                 .addOption(PLS_SIMILAR_SONG_OPTION).addOption(PLS_SIMILAR_GENRE_OPTION)
-                .addOption(PLS_SIMILAR_MOOD_OPTION).addOption(PLS_SIMILAR_INSTRUMENT_OPTION);
+                .addOption(PLS_SIMILAR_MOOD_OPTION).addOption(PLS_SIMILAR_INSTRUMENT_OPTION)
+                .addOption(PLS_SIMILAR_INCLUDE_BPM);
     }
 
     public static void main(String[] args) throws Exception {

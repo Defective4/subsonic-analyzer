@@ -18,19 +18,21 @@ public class ProgramOptions {
     public static final Option PLS_PUBLIC_OPTION;
     public static final Option PLS_REPLACE_OPTION;
     public static final Option PLS_SIMILAR_GENRE_OPTION;
+    public static final Option PLS_SIMILAR_INCLUDE_BPM;
     public static final Option PLS_SIMILAR_INSTRUMENT_OPTION;
     public static final Option PLS_SIMILAR_MOOD_OPTION;
     public static final Option PLS_SIMILAR_SONG_OPTION;
 
     static {
-
-        PLS_SIMILAR_GENRE_OPTION = Option.builder().longOpt("similar-song-same-genre").desc(
+        PLS_SIMILAR_INCLUDE_BPM = Option.builder().longOpt("include-bpm")
+                .desc("Include tempo calculations in similar songs analysis.").build();
+        PLS_SIMILAR_GENRE_OPTION = Option.builder().longOpt("same-genre").desc(
                 "If enabled, and --similar-song is used, only songs with the same genre as the base will be matched.")
                 .build();
-        PLS_SIMILAR_INSTRUMENT_OPTION = Option.builder().longOpt("similar-song-same-instrument").desc(
+        PLS_SIMILAR_INSTRUMENT_OPTION = Option.builder().longOpt("same-instrument").desc(
                 "If enabled, and --similar-song is used, only songs with the same instrument as the base will be matched.")
                 .build();
-        PLS_SIMILAR_MOOD_OPTION = Option.builder().longOpt("similar-song-same-mood").desc(
+        PLS_SIMILAR_MOOD_OPTION = Option.builder().longOpt("same-mood").desc(
                 "If enabled, and --similar-song is used, only songs with the same mood as the base will be matched.")
                 .build();
 

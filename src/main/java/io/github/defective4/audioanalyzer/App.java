@@ -49,7 +49,7 @@ public class App {
 
     public void groupTracks(String baseSong, String moodFilter, String instrumentFilter, String genreFilter,
             String playlistName, String replacePlaylist, int limit, boolean newPublic, boolean similarGenre,
-            boolean similarMood, boolean similarInstrument) throws SQLException, IOException {
+            boolean similarMood, boolean similarInstrument, boolean includeTempo) throws SQLException, IOException {
         checkAPI();
 
         logger.info("Getting tracks from the database...");
@@ -112,7 +112,7 @@ public class App {
         if (baseOp.isPresent()) {
             Track base = baseOp.get();
             stream = stream.sorted((t1, t2) -> {
-                double diff = calculateSimilarity(t1, base) - calculateSimilarity(t2, base);
+                double diff = calculateSimilarity(t1, base, includeTempo) - calculateSimilarity(t2, base, includeTempo);
                 return diff < 0 ? -1 : diff > 0 ? 1 : 0;
             });
             if (similarGenre) stream = stream.filter(track -> track.genre().equals(base.genre()));
@@ -228,12 +228,13 @@ public class App {
         return analyzer;
     }
 
-    private static double calculateSimilarity(Track track1, Track track2) {
+    private static double calculateSimilarity(Track track1, Track track2, boolean tempo) {
         double sum = 0;
         for (Entry<String, Float> entry : track1.scores().entrySet()) {
             float diff = entry.getValue() - track2.scores().get(entry.getKey());
             sum += diff * diff;
         }
+        if (tempo) sum += (track1.bpm() - track2.bpm()) / 200f;
         return Math.sqrt(sum);
     }
 
