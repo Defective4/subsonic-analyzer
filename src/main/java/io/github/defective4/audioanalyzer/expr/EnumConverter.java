@@ -15,7 +15,9 @@ public class EnumConverter<T extends Enum<?>> implements Converter<T, Expression
     @Override
     public T apply(String string) throws ExpressionConversionException {
         return Arrays.stream(type.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(string)).findAny()
-                .orElseThrow(() -> new ExpressionConversionException("No such element: " + string));
+                .orElseThrow(() -> new ExpressionConversionException("No such element: %s. Available elements: %s"
+                        .formatted(string, String.join(", ", Arrays.stream(type.getEnumConstants())
+                                .map(e -> e.name().toLowerCase()).toArray(String[]::new)))));
     }
 
 }
