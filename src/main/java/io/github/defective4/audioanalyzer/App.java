@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,11 +90,11 @@ public class App {
                 logger.info("Available genres:");
                 set.forEach(s -> logger.info(" - " + s));
                 return;
-            } else if (!set.contains(genreFilter)) {
+            } else if (!set.stream().anyMatch(e -> Pattern.matches(genreFilter.toLowerCase(), e.toLowerCase()))) {
                 logger.error("Genre {} does not exist", genreFilter);
                 return;
             }
-            stream = stream.filter(t -> t.genre().equalsIgnoreCase(genreFilter));
+            stream = stream.filter(t -> Pattern.matches(genreFilter.toLowerCase(), t.genre().toLowerCase()));
         }
 
         Optional<Track> baseOp = Optional.empty();

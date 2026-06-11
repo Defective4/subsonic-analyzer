@@ -29,8 +29,7 @@ public class ProgramOptions {
     static {
         PLS_BPM_FILTER = Option.builder().longOpt("bpm-filter").argName("filter expr.").numberOfArgs(1)
                 .desc("Filter songs by their BPM. You can use > and < (Example: >70 for songs with more than 70 BPM)")
-                .converter(new IntegerExpressionConverter())
-                .build();
+                .converter(new IntegerExpressionConverter()).build();
         PLS_SIMILAR_INCLUDE_BPM = Option.builder().longOpt("include-bpm")
                 .desc("Include tempo calculations in similar songs analysis.").build();
         PLS_SIMILAR_GENRE_OPTION = Option.builder().longOpt("same-genre").desc(
@@ -49,7 +48,8 @@ public class ProgramOptions {
                 .longOpt("all").build();
 
         PLS_GENRE_FILTER_OPTION = Option.builder().longOpt("genre-filter").numberOfArgs(1).argName("genre")
-                .desc("Filter songs based on their genre. Pass ?list to list available genres.").build();
+                .desc("Filter songs based on their genre. Pass ?list to list available genres. Regex IS supported.")
+                .build();
         PLS_INSTRUMENT_FILTER_OPTION = Option.builder().longOpt("instrument-filter").numberOfArgs(1)
                 .argName("instrument")
                 .desc("Filter songs based on their primary instrument. Pass ?list to list available instruments.")
