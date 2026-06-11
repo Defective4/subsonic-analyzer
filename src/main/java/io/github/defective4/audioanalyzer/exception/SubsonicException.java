@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.subsonic.exception;
+package io.github.defective4.audioanalyzer.exception;
 
 import java.io.IOException;
 

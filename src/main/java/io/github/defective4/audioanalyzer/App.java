@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import io.github.defective4.audioanalyzer.exception.MissingModelsException;
+import io.github.defective4.audioanalyzer.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.expr.NumericExpression;
 import io.github.defective4.audioanalyzer.format.MarkdownTableWriter;
 import io.github.defective4.audioanalyzer.format.PrintFormat;
@@ -36,7 +38,6 @@ import io.github.defective4.audioanalyzer.ml.model.AnalysisResponse;
 import io.github.defective4.audioanalyzer.ml.model.ModelMetadata;
 import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
-import io.github.defective4.audioanalyzer.subsonic.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.subsonic.model.Entity;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
 
@@ -217,6 +218,13 @@ public class App {
                     }
                     logger.info("Analyzing %s...".formatted(song.id()));
                     AnalysisResponse response = analyzer.requestAnalysis(target.toString());
+                    List<String> missing = new ArrayList<>();
+                    for (String model : ModelLoader.REQUIRED_MODELS)
+                        if (!response.scoreMap().containsKey(model)) missing.add(model);
+                    if (!missing.isEmpty()) {
+                        throw new MissingModelsException("The analyzer service is missing the following models: %s"
+                                .formatted(String.join(", ", missing.toArray(String[]::new))), missing);
+                    }
                     float bpm = response.bpm();
                     logger.info("Storing results in database...");
                     logger.info("Results for %s:".formatted(song.title()));

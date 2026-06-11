@@ -25,7 +25,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-import io.github.defective4.audioanalyzer.subsonic.exception.SubsonicException;
+import io.github.defective4.audioanalyzer.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.subsonic.model.AlbumList;
 import io.github.defective4.audioanalyzer.subsonic.model.Entity;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;

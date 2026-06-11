@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 
@@ -18,6 +19,11 @@ import com.google.gson.Gson;
 import io.github.defective4.audioanalyzer.ml.model.ModelMetadata;
 
 public class ModelLoader {
+
+    public static final Set<String> REQUIRED_MODELS = Set.of("danceability_discogs_effnet_1",
+            "mood_aggressive_discogs_effnet_1", "mood_happy_discogs_effnet_1", "mood_party_discogs_effnet_1",
+            "mood_relaxed_discogs_effnet_1", "mood_sad_discogs_effnet_1", "voice_instrumental_discogs_effnet_1");
+
     private static final Map<String, String> AVAILABLE_MODELS = Map.of("genres",
             "genre_discogs400-discogs-effnet-1.json", "instruments", "mtg_jamendo_instrument-discogs-effnet-1.json",
             "moods", "mtg_jamendo_moodtheme-discogs-effnet-1.json");

@@ -41,8 +41,7 @@ public class ProgramOptions {
         PLS_VOCALITY_FILTER_OPTION = Option.builder().longOpt("vocality-filter").numberOfArgs(1).argName("expression")
                 .desc("Filter tracks by their vocality." + "Less than 50% is instrumental, more than 50% is vocal."
                         + "(Example expression: \">50\"." + "This filters tracks with more than 50% vocal score.")
-                .converter(new IntegerExpressionConverter())
-                .build();
+                .converter(new IntegerExpressionConverter()).build();
 
         ST_SONG_OPTION = Option.builder("s").argName("song").numberOfArgs(1)
                 .desc("Get statistics for a particular song. Both song ID and name is supported.").build();
