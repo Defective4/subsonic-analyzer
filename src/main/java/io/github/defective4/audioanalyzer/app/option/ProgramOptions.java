@@ -19,10 +19,14 @@ public class ProgramOptions {
 
     @EnvironmentVariable("ANALYZE_ALL")
     public static final Option AN_ALL;
+    @EnvironmentVariable("AN_FILTER_ALBUM_ARTIST")
+    public static final Option AN_FILTER_ALBUM_ARTIST;
+    @EnvironmentVariable("AN_FILTER_ARTIST")
+    public static final Option AN_FILTER_ARTIST;
+
     @EnvironmentVariable(value = "TENSORFLOW_URL", sensitive = true)
     public static final Option AN_TENSORFLOW;
     public static final Options ANALYSIS_OPTIONS;
-
     public static final Options COMMON_OPTIONS;
     @EnvironmentVariable(value = "DB_FILE", sensitive = true)
     public static final Option DB_LOCATION_OPTION;
@@ -63,6 +67,7 @@ public class ProgramOptions {
     public static final Option PLS_SIMILAR_SONG_OPTION;
     @EnvironmentVariable("PLS_VOCAL_FILTER")
     public static final Option PLS_VOCALITY_FILTER_OPTION;
+
     @EnvironmentVariable("STATS_OUTPUT_FILE")
     public static final Option ST_OUTPUT_OPTION;
     @EnvironmentVariable("STATS_FORMAT")
@@ -83,7 +88,11 @@ public class ProgramOptions {
 
     static {
         // Define options
-        ENV_UNCENSOR = Option.builder().longOpt("uncensor").desc("Do not censor sensitive environment variables")
+        AN_FILTER_ARTIST = Option.builder().longOpt("filter-artist").numberOfArgs(1).argName("artist")
+                .desc("Filter analyzed tracks based on artist name.").build();
+        AN_FILTER_ALBUM_ARTIST = Option.builder().longOpt("filter-album-artist").numberOfArgs(1).argName("artist")
+                .desc("Filter analyzed tracks based on album artist name.").build();
+        ENV_UNCENSOR = Option.builder().longOpt("uncensor").desc("Do not censor sensitive environment variables.")
                 .build();
         HELP_OPTION = Option.builder("h").desc("Display this help section").longOpt("help").build();
         DB_LOCATION_OPTION = Option.builder("d")
@@ -158,8 +167,8 @@ public class ProgramOptions {
 
         COMMON_OPTIONS = new Options().addOption(HELP_OPTION).addOption(DB_LOCATION_OPTION);
         ANALYSIS_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(AN_ALL).addOption(AN_TENSORFLOW)
-                .addOption(ProgramOptions.USER_OPTION).addOption(ProgramOptions.PASSWORD_OPTION)
-                .addOption(SUBSONIC_URL);
+                .addOption(ProgramOptions.USER_OPTION).addOption(ProgramOptions.PASSWORD_OPTION).addOption(SUBSONIC_URL)
+                .addOption(AN_FILTER_ARTIST).addOption(AN_FILTER_ALBUM_ARTIST);
         PLAYLIST_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(PLS_NAME_OPTION)
                 .addOption(ProgramOptions.USER_OPTION).addOption(ProgramOptions.PASSWORD_OPTION)
                 .addOption(PLS_GENRE_FILTER_OPTION).addOption(PLS_INSTRUMENT_FILTER_OPTION).addOption(PLS_LIMIT_OPTION)

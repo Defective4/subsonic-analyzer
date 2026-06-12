@@ -67,7 +67,7 @@ public class SubsonicAPI {
         return request("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset)).albumList();
     }
 
-    public List<Entity> getAllAlbums(Logger logger) throws IOException {
+    public List<Entity> getAllAlbums(Logger logger, String filterAlbumArtist) throws IOException {
         List<Entity> albums = new ArrayList<>();
         int offset = 0;
         int i = 0;
@@ -80,18 +80,20 @@ public class SubsonicAPI {
             else
                 break;
         }
-        return Collections.unmodifiableList(albums);
+        return Collections.unmodifiableList(filterAlbumArtist == null ? albums
+                : albums.stream().filter(a -> a.artist().equalsIgnoreCase(filterAlbumArtist)).toList());
     }
 
-    public List<Entity> getAllMusic(Logger logger) throws IOException {
+    public List<Entity> getAllMusic(Logger logger, String filterArtist, String filterAlbumArtist) throws IOException {
         List<Entity> songs = new ArrayList<>();
-        List<Entity> albums = getAllAlbums(logger);
+        List<Entity> albums = getAllAlbums(logger, filterAlbumArtist);
         int i = 0;
         for (Entity album : albums) {
             if (++i % 100 == 0) logger.info("Downloaded metadata for %s out of %s albums".formatted(i, albums.size()));
             Collections.addAll(songs, getMusicDirectory(album.id()).child());
         }
-        return Collections.unmodifiableList(songs);
+        return Collections.unmodifiableList(filterArtist == null ? songs
+                : songs.stream().filter(s -> s.artist().equalsIgnoreCase(filterArtist)).toList());
     }
 
     public SongList getMusicDirectory(String id) throws IOException {

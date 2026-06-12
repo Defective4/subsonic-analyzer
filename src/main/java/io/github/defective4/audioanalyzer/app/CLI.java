@@ -46,7 +46,10 @@ public class CLI {
 
         @Override
         public boolean consume(CommandLine cli, App prog) throws Exception {
-            prog.analyze(!cli.hasOption(AN_ALL));
+            boolean notAnalyzeAll = cli.hasOption(AN_ALL);
+            String filterArtist = cli.getOptionValue(AN_FILTER_ARTIST);
+            String filterAlbumArtist = cli.getOptionValue(AN_FILTER_ALBUM_ARTIST);
+            prog.analyze(!notAnalyzeAll, filterArtist, filterAlbumArtist);
             return true;
         }
 

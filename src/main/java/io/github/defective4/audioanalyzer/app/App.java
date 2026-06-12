@@ -62,7 +62,7 @@ public class App {
         api = username != null ? new SubsonicAPI(username, password, url) : null;
     }
 
-    public void analyze(boolean onlyNew) throws Exception {
+    public void analyze(boolean onlyNew, String filterArtist, String filterAlbumArtist) throws Exception {
         try {
             TensorflowAnalyzer analyzer = getTensorflow();
             logger.info("Analyzer server OK");
@@ -70,7 +70,7 @@ public class App {
             Map<String, ModelMetadata> models = modelLoader.getLoadedModels();
             checkAPI();
             logger.info("Downloading track lists...");
-            List<Entity> songs = api.getAllMusic(logger);
+            List<Entity> songs = api.getAllMusic(logger, filterArtist,filterAlbumArtist);
             logger.info("Downloaded information about %s songs".formatted(songs.size()));
             logger.info("Starting analysis...");
 
@@ -302,7 +302,8 @@ public class App {
                         md.writeLines(tracks.stream()
                                 .map(track -> new String[] { track.id(), track.name(), track.artist(), track.mood(),
                                         track.instrument(), track.genre(), Integer.toString(track.bpm()),
-                                        Boolean.toString(track.failed()), track.failedReason() == null ? "" : track.failedReason() })
+                                        Boolean.toString(track.failed()),
+                                        track.failedReason() == null ? "" : track.failedReason() })
                                 .toArray(String[][]::new));
                     }
                 }
