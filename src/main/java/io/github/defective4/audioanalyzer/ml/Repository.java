@@ -103,6 +103,13 @@ public class Repository {
         }
     }
 
+    public boolean hasFailedTracks() throws SQLException {
+        try (Statement st = con.createStatement();
+                ResultSet set = st.executeQuery("select * from `moods` where `failed` = true")) {
+            return set.next();
+        }
+    }
+
     public void insertData(Entity song, Map<String, Float> values, String moodName, String instrumentName,
             String genreName, float bpm, Exception failed) throws SQLException {
         List<String> columns = getColumns();

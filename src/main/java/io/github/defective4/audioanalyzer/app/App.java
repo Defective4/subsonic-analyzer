@@ -48,6 +48,8 @@ import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
 public class App {
 
     public static final String COMMAND_ENV = "A_COMMAND";
+    private static final String ERROR_EMPTY = "The song list is empty.";
+    private static final String ERROR_UNANALYZED = "The song database is not analyzed. You have to use \"analyze\" command before doing any operations on the database";
 
     private final String analyzerURL;
 
@@ -140,11 +142,29 @@ public class App {
     public void groupTracks(String baseSong, String moodFilter, String instrumentFilter, String genreFilter,
             String playlistName, String replacePlaylist, int limit, boolean newPublic, boolean sameGenre,
             boolean sameMood, boolean sameInstrument, boolean includeTempo, NumericExpression bpmExpr,
-            NumericExpression vocalExpr, boolean sameArtist, String filterArtist) throws SQLException, IOException {
+            NumericExpression vocalExpr, boolean sameArtist, String filterArtist)
+            throws SQLException, IOException, InterruptedException {
         checkAPI();
+        if (db.getAnalysisState() == AnalysisState.UNANALYZED) {
+            logger.error(ERROR_UNANALYZED);
+            return;
+        }
+
+        if (db.hasFailedTracks()) {
+            logger.warn("Some songs are marked as failed. Consider reanalyzing the song database.");
+            Thread.sleep(1000);
+        }
+
+        if (db.getAnalysisState() == AnalysisState.ABORTED) {
+            printAbortedWarning();
+        }
 
         logger.info("Getting tracks from the database...");
         List<Track> tracks = new ArrayList<>(db.getAllTracks(true));
+        if (tracks.isEmpty()) {
+            logger.error(ERROR_EMPTY);
+            return;
+        }
         logger.info("Loaded {} tracks", tracks.size());
         Collections.shuffle(tracks, random);
         Stream<Track> stream = tracks.stream();
@@ -285,7 +305,15 @@ public class App {
         }
     }
 
-    public void printSongs(PrintFormat printFormat, String song, String output) throws SQLException, IOException {
+    public void printSongs(PrintFormat printFormat, String song, String output)
+            throws SQLException, IOException, InterruptedException {
+        if (db.getAnalysisState() == AnalysisState.UNANALYZED) {
+            logger.error(ERROR_UNANALYZED);
+            return;
+        }
+        if (db.getAnalysisState() == AnalysisState.ABORTED) {
+            printAbortedWarning();
+        }
         logger.info("Retrieving song statistics...");
         List<Track> tracks;
         if (song == null) {
@@ -297,6 +325,10 @@ public class App {
                 return;
             }
             tracks = Collections.singletonList(track.get());
+        }
+        if (tracks.isEmpty()) {
+            logger.error(ERROR_EMPTY);
+            return;
         }
         try (Writer writer = new OutputStreamWriter(
                 output.equals("-") ? System.out : Files.newOutputStream(Path.of(output)))) {
@@ -333,5 +365,10 @@ public class App {
         TensorflowAnalyzer analyzer = new TensorflowAnalyzer(analyzerURL);
         analyzer.ping();
         return analyzer;
+    }
+
+    private void printAbortedWarning() throws InterruptedException {
+        logger.warn("Last analysis was aborted. The database might be incomplete, consider reanalyzing.");
+        Thread.sleep(1000);
     }
 }
