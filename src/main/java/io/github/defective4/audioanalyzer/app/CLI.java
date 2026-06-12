@@ -102,7 +102,8 @@ public class CLI {
         String envCmd = System.getenv("A_COMMAND");
         String cmd = envCmd != null || args.length > 0 ? envCmd != null ? envCmd : args[0] : null;
         if (cmd == null || !COMMANDS.containsKey(cmd)) {
-            System.err.println(!COMMANDS.containsKey(cmd) ? "Invalid command " + cmd : "Usage: <command> [args]");
+            System.err.println(
+                    cmd != null && !COMMANDS.containsKey(cmd) ? "Invalid command " + cmd : "Usage: <command> [args]");
             System.err.println("Valid commands are:");
             COMMANDS.forEach((k, v) -> { System.err.println(" - %s: %s".formatted(k, v.desc())); });
             System.exit(1);
@@ -114,12 +115,12 @@ public class CLI {
         try {
             cli = DefaultParser.builder().build().parse(options, Arrays.copyOfRange(args, 1, args.length));
             if (!cli.hasOption('h')) {
-                String db = getOptionValue(cli, 'd', DEFAULT_DB);
-                String user = getOptionValue(cli, 'u');
-                String password = getOptionValue(cli, 'p');
-                String subsonicURL = getOptionValue(cli, 's');
+                String db = getOptionValue(cli, DB_LOCATION_OPTION, DEFAULT_DB);
+                String user = getOptionValue(cli, USER_OPTION);
+                String password = getOptionValue(cli, PASSWORD_OPTION);
+                String subsonicURL = getOptionValue(cli, SUBSONIC_URL);
                 if (subsonicURL != null && !subsonicURL.endsWith("/")) subsonicURL = subsonicURL + "/";
-                String essentiaURL = getOptionValue(cli, 't', DEFAULT_ESSENTIA);
+                String essentiaURL = getOptionValue(cli, AN_TENSORFLOW, DEFAULT_ESSENTIA);
                 if (!essentiaURL.endsWith("/")) essentiaURL = essentiaURL + "/";
 
                 App prog = new App(db, user, password.toCharArray(), subsonicURL, essentiaURL);

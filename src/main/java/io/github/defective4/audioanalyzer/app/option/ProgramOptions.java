@@ -17,40 +17,61 @@ import io.github.defective4.audioanalyzer.format.PrintFormat;
 
 public class ProgramOptions {
 
+    @EnvVariable("ANALYZE_ALL")
     public static final Option AN_ALL;
+    @EnvVariable(value = "TENSORFLOW_URL", sensitive = true)
     public static final Option AN_TENSORFLOW;
     public static final Options ANALYSIS_OPTIONS;
 
     public static final Options COMMON_OPTIONS;
+    @EnvVariable(value = "DB_FILE", sensitive = true)
     public static final Option DB_LOCATION_OPTION;
     public static final String DEFAULT_DB = "./mood.sqlite";
     public static final String DEFAULT_ESSENTIA = "http://127.0.0.1:8000/";
     public static final int DEFAULT_LIMIT = 30;
     public static final Option HELP_OPTION;
+    @EnvVariable(value = "SUBSONIC_PASSWORD", sensitive = true)
     public static final Option PASSWORD_OPTION;
     public static final Options PLAYLIST_OPTIONS;
     @EnvVariable("PLS_BPM_FILTER")
     public static final Option PLS_BPM_FILTER;
+    @EnvVariable("PLS_GENRE_FILTER")
     public static final Option PLS_GENRE_FILTER_OPTION;
+    @EnvVariable("PLS_INSTRUMENT_FILTER")
     public static final Option PLS_INSTRUMENT_FILTER_OPTION;
     @EnvVariable("PLS_LIMIT")
     public static final Option PLS_LIMIT_OPTION;
+    @EnvVariable("PLS_MOOD_FILTER")
     public static final Option PLS_MOOD_FILTER_OPTION;
     public static final Option PLS_NAME_OPTION;
+    @EnvVariable("PLS_PUBLIC")
     public static final Option PLS_PUBLIC_OPTION;
+    @EnvVariable("PLS_REPLACE_PLAYLIST")
     public static final Option PLS_REPLACE_OPTION;
+    @EnvVariable("PLS_SAME_GENRE")
     public static final Option PLS_SIMILAR_GENRE_OPTION;
+    @EnvVariable("PLS_SAME_INCLUDE_BPM")
     public static final Option PLS_SIMILAR_INCLUDE_BPM;
+    @EnvVariable("PLS_SAME_INSTRUMENT")
     public static final Option PLS_SIMILAR_INSTRUMENT_OPTION;
+    @EnvVariable("PLS_SAME_MOOD")
     public static final Option PLS_SIMILAR_MOOD_OPTION;
+    @EnvVariable("PLS_SIMILAR_SONG")
     public static final Option PLS_SIMILAR_SONG_OPTION;
+    @EnvVariable("PLS_VOCAL_FILTER")
     public static final Option PLS_VOCALITY_FILTER_OPTION;
+    @EnvVariable("STATS_OUTPUT_FILE")
     public static final Option ST_OUTPUT_OPTION;
+    @EnvVariable("STATS_FORMAT")
     public static final Option ST_PRINT_FORMAT_OPTION;
     @EnvVariable("STATS_SONG")
     public static final Option ST_SONG_OPTION;
     public static final Options STATS_OPTIONS;
+
+    @EnvVariable(value = "SUSBONIC_URL", sensitive = true)
     public static final Option SUBSONIC_URL;
+
+    @EnvVariable(value = "SUBSONIC_USER", sensitive = true)
     public static final Option USER_OPTION;
 
     private static final Map<String, Object> ENV_VARIABLES;
@@ -152,28 +173,23 @@ public class ProgramOptions {
         return ENV_VARIABLES.getOrDefault(op.clone(), def);
     }
 
-    public static String getOptionValue(CommandLine cli, char option) {
-        return getOptionValue(cli, option, null);
-    }
-
-    public static String getOptionValue(CommandLine cli, char option, String def) {
-        return cli.getOptionValue(option, def);
-    }
-
     public static String getOptionValue(CommandLine cli, Option option) {
         return getOptionValue(cli, option, null);
     }
 
     public static String getOptionValue(CommandLine cli, Option option, String def) {
-        return cli.getOptionValue(option, def);
+        return cli.hasOption(option) ? cli.getOptionValue(option, def)
+                : getEnvValue(option, def) == null ? null : getEnvValue(option, def).toString();
     }
 
     public static <T> T getParsedOptionValue(CommandLine cli, Option option, T def) throws ParseException {
-        return cli.getParsedOptionValue(option, def);
+        if (cli.hasOption(option)) return cli.getParsedOptionValue(option, def);
+        return (T) getEnvValue(option, def);
     }
 
     public static boolean hasOption(CommandLine cli, Option option) {
-        return cli.hasOption(option);
+        return cli.hasOption(option)
+                || Boolean.TRUE.toString().equalsIgnoreCase(getEnvValue(option, Boolean.FALSE.toString()).toString());
     }
 
     private static Map<String, Object> getEnvironmentVariables() {
@@ -206,5 +222,15 @@ public class ProgramOptions {
             throw new IllegalStateException(e);
         }
         return Collections.unmodifiableMap(vars);
+    }
+
+    private static Object getEnvValue(Option opt) {
+        return getEnvValue(opt);
+    }
+
+    private static Object getEnvValue(Option opt, Object def) {
+        Object val = ENV_VARIABLES.get(opt.getLongOpt());
+        return val == null ? def : val;
+
     }
 }

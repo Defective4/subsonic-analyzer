@@ -9,5 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target(FIELD)
 public @interface EnvVariable {
+    boolean sensitive() default false;
     String value();
 }
