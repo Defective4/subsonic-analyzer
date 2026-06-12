@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public record Track(String id, String name, String mood, String instrument, String genre, Map<String, Float> scores,
-        int bpm) {
+        int bpm, boolean failed, String failedReason, String artist) {
 
     public int getVocality() {
         return (int) (scores.getOrDefault("voice_instrumental_discogs_effnet_1", 0f) * 100f);

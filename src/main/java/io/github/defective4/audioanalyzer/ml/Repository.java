@@ -33,7 +33,7 @@ public class Repository {
                     	"bpm"             INTEGER NOT NULL,
                     	"failed"          INTEGER NOT NULL DEFAULT false,
                     	"failedReason"    TEXT DEFAULT NULL,
-                    	"artist"          TEXT DEFAULT NULL,
+                    	"artist"          TEXT NOT NULL,
                     	PRIMARY KEY("trackId")
                     )""");
             st.execute("CREATE INDEX IF NOT EXISTS mood_1_IDX ON moods (mood)");
@@ -47,16 +47,19 @@ public class Repository {
 
     public List<String> getAllSongIDs() throws SQLException {
         List<String> songs = new ArrayList<>();
-        try (Statement st = con.createStatement(); ResultSet set = st.executeQuery("select trackId from `moods`")) {
+        try (Statement st = con.createStatement();
+                ResultSet set = st.executeQuery("select trackId from `moods` where failed = false")) {
             while (set.next()) songs.add(set.getString(1));
         }
         return Collections.unmodifiableList(songs);
     }
 
-    public List<Track> getAllTracks() throws SQLException {
+    public List<Track> getAllTracks(boolean ignoreFailed) throws SQLException {
         List<Track> tracks = new ArrayList<>();
         List<String> columns = getColumns();
-        try (Statement st = con.createStatement(); ResultSet set = st.executeQuery("select * from `moods`")) {
+        try (Statement st = con.createStatement();
+                ResultSet set = st.executeQuery(
+                        ignoreFailed ? "select * from `moods` where failed = false" : "select * from `moods`")) {
             while (set.next()) {
                 tracks.add(trackFromResultSet(set, columns));
             }
@@ -67,7 +70,7 @@ public class Repository {
     public Optional<Track> getTrackByIdOrName(String idOrName) throws SQLException {
         List<String> cols = getColumns();
         try (PreparedStatement st = con
-                .prepareStatement("select * from `moods` where `trackId` = ? or `trackName` = ?")) {
+                .prepareStatement("select * from `moods` where (`trackId` = ? or `trackName` = ?) and `failed` = false")) {
             st.setString(1, idOrName);
             st.setString(2, idOrName);
             try (ResultSet set = st.executeQuery()) {
@@ -139,8 +142,12 @@ public class Repository {
         String instrument = set.getString(++i);
         String genre = set.getString(++i);
         int bpm = set.getInt(++i);
+        boolean failed = set.getBoolean(++i);
+        String failedReason = set.getString(++i);
+        String artist = set.getString(++i);
         Map<String, Float> scores = new HashMap<>();
         for (String column : cols) scores.put(column, set.getFloat(column));
-        return new Track(id, name, mood, instrument, genre, Collections.unmodifiableMap(scores), bpm);
+        return new Track(id, name, mood, instrument, genre, Collections.unmodifiableMap(scores), bpm, failed,
+                failedReason, artist);
     }
 }

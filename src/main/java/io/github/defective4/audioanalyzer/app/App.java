@@ -141,7 +141,7 @@ public class App {
         checkAPI();
 
         logger.info("Getting tracks from the database...");
-        List<Track> tracks = new ArrayList<>(db.getAllTracks());
+        List<Track> tracks = new ArrayList<>(db.getAllTracks(true));
         logger.info("Loaded {} tracks", tracks.size());
         Collections.shuffle(tracks, random);
         Stream<Track> stream = tracks.stream();
@@ -282,7 +282,7 @@ public class App {
         logger.info("Retrieving song statistics...");
         List<Track> tracks;
         if (song == null) {
-            tracks = db.getAllTracks();
+            tracks = db.getAllTracks(false);
         } else {
             Optional<Track> track = db.getTrackByIdOrName(song);
             if (!track.isPresent()) {
@@ -297,11 +297,12 @@ public class App {
                 case JSON -> { new Gson().toJson(tracks, writer); }
                 case JSON_PRETTY -> { new GsonBuilder().setPrettyPrinting().create().toJson(tracks, writer); }
                 case MARKDOWN -> {
-                    try (MarkdownTableWriter md = new MarkdownTableWriter(writer,
-                            new String[] { "Id", "Name", "Mood", "Instrument", "Genre", "BPM" })) {
-                        md.writeLines(tracks
-                                .stream().map(track -> new String[] { track.id(), track.name(), track.mood(),
-                                        track.instrument(), track.genre(), Integer.toString(track.bpm()) })
+                    try (MarkdownTableWriter md = new MarkdownTableWriter(writer, new String[] { "Id", "Name", "Artist",
+                            "Mood", "Instrument", "Genre", "BPM", "Failed", "Failed reason" })) {
+                        md.writeLines(tracks.stream()
+                                .map(track -> new String[] { track.id(), track.name(), track.artist(), track.mood(),
+                                        track.instrument(), track.genre(), Integer.toString(track.bpm()),
+                                        Boolean.toString(track.failed()), track.failedReason() == null ? "" : track.failedReason() })
                                 .toArray(String[][]::new));
                     }
                 }
