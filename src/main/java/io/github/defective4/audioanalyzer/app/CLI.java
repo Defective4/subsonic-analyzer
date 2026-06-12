@@ -47,7 +47,7 @@ public class CLI {
         @Override
         public boolean consume(CommandLine cli, App prog) throws Exception {
             boolean notAnalyzeAll = cli.hasOption(AN_ALL_OPTION);
-            String filterArtist = cli.getOptionValue(AN_FILTER_ARTIST_OPTION);
+            String filterArtist = cli.getOptionValue(FILTER_ARTIST_OPTION);
             String filterAlbumArtist = cli.getOptionValue(AN_FILTER_ALBUM_ARTIST_OPTION);
             prog.analyze(!notAnalyzeAll, filterArtist, filterAlbumArtist);
             return true;
@@ -85,8 +85,10 @@ public class CLI {
             boolean similarInstrument = hasOption(cli, PLS_SAME_INSTRUMENT_OPTION);
             boolean tempo = hasOption(cli, PLS_SIMILAR_INCLUDE_BPM);
             boolean sameArtist = hasOption(cli, PLS_SAME_ARTIST_OPTION);
+            String filterPlaylist = getOptionValue(cli, FILTER_ARTIST_OPTION);
             prog.groupTracks(song, mood, instrument, genre, playlistName, replacePlaylist, limit, newPublic,
-                    similarGenre, similarMood, similarInstrument, tempo, bpmExpr, vocalExpr, sameArtist);
+                    similarGenre, similarMood, similarInstrument, tempo, bpmExpr, vocalExpr, sameArtist,
+                    filterPlaylist);
             return true;
         }
 

@@ -21,11 +21,9 @@ public class ProgramOptions {
     public static final Option AN_ALL_OPTION;
     @EnvironmentVariable("AN_FILTER_ALBUM_ARTIST")
     public static final Option AN_FILTER_ALBUM_ARTIST_OPTION;
-    @EnvironmentVariable("AN_FILTER_ARTIST")
-    public static final Option AN_FILTER_ARTIST_OPTION;
-
     @EnvironmentVariable(value = "TENSORFLOW_URL", sensitive = true)
     public static final Option AN_TENSORFLOW_OPTION;
+
     public static final Options ANALYSIS_OPTIONS;
     public static final Options COMMON_OPTIONS;
     @EnvironmentVariable(value = "DB_FILE", sensitive = true)
@@ -36,6 +34,8 @@ public class ProgramOptions {
     public static final Options ENV_OPTIONS;
     @EnvironmentVariable("ENV_UNCENSOR")
     public static final Option ENV_UNCENSOR_OPTION;
+    @EnvironmentVariable("FILTER_ARTIST")
+    public static final Option FILTER_ARTIST_OPTION;
     public static final Option HELP_OPTION;
     @EnvironmentVariable(value = "SUBSONIC_PASSWORD", sensitive = true)
     public static final Option PASSWORD_OPTION;
@@ -92,9 +92,9 @@ public class ProgramOptions {
         // Define options
         PLS_SAME_ARTIST_OPTION = Option.builder().longOpt("same-artist")
                 .desc("Filter songs with the same artist as in --similar-song").build();
-        AN_FILTER_ARTIST_OPTION = Option.builder().longOpt("filter-artist").numberOfArgs(1).argName("artist")
-                .desc("Filter analyzed tracks based on artist name. This option is case-insensitive.").build();
-        AN_FILTER_ALBUM_ARTIST_OPTION = Option.builder().longOpt("filter-album-artist").numberOfArgs(1)
+        FILTER_ARTIST_OPTION = Option.builder().longOpt("artist-filter").numberOfArgs(1).argName("artist")
+                .desc("Filter tracks based on artist name. This option is case-insensitive.").build();
+        AN_FILTER_ALBUM_ARTIST_OPTION = Option.builder().longOpt("album-artist-filter").numberOfArgs(1)
                 .argName("artist")
                 .desc("Filter analyzed tracks based on album artist name. This option is case-insensitive.").build();
         ENV_UNCENSOR_OPTION = Option.builder().longOpt("uncensor")
@@ -174,7 +174,7 @@ public class ProgramOptions {
         ANALYSIS_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(AN_ALL_OPTION)
                 .addOption(AN_TENSORFLOW_OPTION).addOption(ProgramOptions.USER_OPTION)
                 .addOption(ProgramOptions.PASSWORD_OPTION).addOption(SUBSONIC_URL_OPTION)
-                .addOption(AN_FILTER_ARTIST_OPTION).addOption(AN_FILTER_ALBUM_ARTIST_OPTION);
+                .addOption(FILTER_ARTIST_OPTION).addOption(AN_FILTER_ALBUM_ARTIST_OPTION);
         PLAYLIST_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(PLS_NAME_OPTION)
                 .addOption(ProgramOptions.USER_OPTION).addOption(ProgramOptions.PASSWORD_OPTION)
                 .addOption(PLS_GENRE_FILTER_OPTION).addOption(PLS_INSTRUMENT_FILTER_OPTION).addOption(PLS_LIMIT_OPTION)
@@ -182,7 +182,8 @@ public class ProgramOptions {
                 .addOption(PLS_SIMILAR_SONG_OPTION).addOption(PLS_SAME_GENRE_OPTION).addOption(PLS_SAME_MOOD_OPTION)
                 .addOption(PLS_SAME_INSTRUMENT_OPTION).addOption(PLS_SIMILAR_INCLUDE_BPM)
                 .addOption(PLS_BPM_FILTER_OPTION).addOption(SUBSONIC_URL_OPTION).addOption(PLS_VOCALITY_FILTER_OPTION)
-                .addOption(PLS_SAME_ARTIST_OPTION);
+                .addOption(PLS_SAME_ARTIST_OPTION)
+                .addOption(FILTER_ARTIST_OPTION);
         STATS_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(ST_PRINT_FORMAT_OPTION)
                 .addOption(ST_SONG_OPTION).addOption(ST_OUTPUT_OPTION);
         ENV_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(ENV_UNCENSOR_OPTION);

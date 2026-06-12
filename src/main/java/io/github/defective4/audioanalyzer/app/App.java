@@ -137,7 +137,7 @@ public class App {
     public void groupTracks(String baseSong, String moodFilter, String instrumentFilter, String genreFilter,
             String playlistName, String replacePlaylist, int limit, boolean newPublic, boolean sameGenre,
             boolean sameMood, boolean sameInstrument, boolean includeTempo, NumericExpression bpmExpr,
-            NumericExpression vocalExpr, boolean sameArtist) throws SQLException, IOException {
+            NumericExpression vocalExpr, boolean sameArtist, String filterArtist) throws SQLException, IOException {
         checkAPI();
 
         logger.info("Getting tracks from the database...");
@@ -145,6 +145,7 @@ public class App {
         logger.info("Loaded {} tracks", tracks.size());
         Collections.shuffle(tracks, random);
         Stream<Track> stream = tracks.stream();
+        if (filterArtist != null) stream = stream.filter(t -> t.artist().equalsIgnoreCase(filterArtist));
         if (moodFilter != null && sameMood) {
             Set<String> set = tracks.stream().map(Track::mood).collect(Collectors.toUnmodifiableSet());
             if (moodFilter.equalsIgnoreCase("?list")) {
@@ -207,8 +208,7 @@ public class App {
             if (sameInstrument) stream = stream.filter(track -> track.instrument().equals(base.instrument()));
             if (sameMood) stream = stream.filter(track -> track.mood().equals(base.mood()));
 
-            if (sameArtist)
-                stream = stream.filter(t -> t.artist().equals(base.artist()));
+            if (sameArtist) stream = stream.filter(t -> t.artist().equals(base.artist()));
 
         }
 
