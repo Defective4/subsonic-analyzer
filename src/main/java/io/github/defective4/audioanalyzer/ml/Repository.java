@@ -30,13 +30,18 @@ public class Repository {
                     	"mood"            TEXT NOT NULL,
                     	"instrument"      TEXT NOT NULL,
                     	"genre"           TEXT NOT NULL,
-                    	"bpm"             NUMERIC NOT NULL,
+                    	"bpm"             INTEGER NOT NULL,
+                    	"failed"          INTEGER NOT NULL DEFAULT false,
+                    	"failedReason"    TEXT DEFAULT NULL,
+                    	"artist"          TEXT DEFAULT NULL,
                     	PRIMARY KEY("trackId")
                     )""");
             st.execute("CREATE INDEX IF NOT EXISTS mood_1_IDX ON moods (mood)");
             st.execute("CREATE INDEX IF NOT EXISTS instrument_1_IDX ON moods (instrument)");
             st.execute("CREATE INDEX IF NOT EXISTS genre_1_IDX ON moods (genre)");
             st.execute("CREATE INDEX IF NOT EXISTS bpm_1_IDX ON moods (bpm)");
+            st.execute("CREATE INDEX IF NOT EXISTS artist_1_IDX ON moods (artist)");
+            st.execute("CREATE INDEX IF NOT EXISTS failed_1_IDX ON moods (failed)");
         }
     }
 
@@ -77,8 +82,8 @@ public class Repository {
         }
     }
 
-    public void insertData(Entity track, Map<String, Float> values, String moodName, String instrumentName,
-            String genreName, float bpm) throws SQLException {
+    public void insertData(Entity song, Map<String, Float> values, String moodName, String instrumentName,
+            String genreName, float bpm, Exception failed) throws SQLException {
         List<String> columns = getColumns();
         for (Map.Entry<String, Float> entry : values.entrySet()) {
             String key = entry.getKey();
@@ -90,17 +95,20 @@ public class Repository {
         List<Map.Entry<String, Float>> valList = new ArrayList<>(values.entrySet());
 
         try (PreparedStatement st = con.prepareStatement(
-                "insert or replace into `moods` (trackId, trackName, mood, instrument, genre, bpm, %s) values (?, ?, ?, ?, ?, ?, %s)"
+                "insert or replace into `moods` (trackId, trackName, mood, instrument, genre, bpm, failed, failedReason, artist, %s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, %s)"
                         .formatted(String.join(", ", valList.stream().map(e -> e.getKey()).toArray(String[]::new)),
                                 String.join(", ", valList.stream().map(e -> String.valueOf(e.getValue()))
                                         .toArray(String[]::new))))) {
             int i = 1;
-            st.setString(i++, track.id());
-            st.setString(i++, track.title());
+            st.setString(i++, song.id());
+            st.setString(i++, song.title());
             st.setString(i++, moodName);
             st.setString(i++, instrumentName);
             st.setString(i++, genreName);
             st.setInt(i++, (int) bpm);
+            st.setBoolean(i++, failed != null);
+            st.setString(i++, failed == null ? null : failed.getMessage());
+            st.setString(i++, song.artist());
             st.executeUpdate();
         }
     }

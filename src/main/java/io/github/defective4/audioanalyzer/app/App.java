@@ -116,11 +116,11 @@ public class App {
                     logger.info(" Instrument: %s".formatted(instrumentName));
                     logger.info(" Genre: %s".formatted(genreName));
                     logger.info(" BPM: %s".formatted(bpm));
-                    System.err.println();
-                    db.insertData(song, response.scoreMap(), moodName, instrumentName, genreName, bpm);
+                    db.insertData(song, response.scoreMap(), moodName, instrumentName, genreName, bpm, null);
                 } catch (IOException e) {
                     e.printStackTrace();
                     errors++;
+                    db.insertData(song, Map.of("failedPlaceholder", 1f), "null", "null", "null", 0, e);
                     continue;
                 } finally {
                     target.toFile().delete();
