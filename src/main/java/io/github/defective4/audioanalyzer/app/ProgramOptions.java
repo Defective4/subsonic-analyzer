@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer;
+package io.github.defective4.audioanalyzer.app;
 
 import java.util.Arrays;
 

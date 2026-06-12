@@ -1,6 +1,6 @@
-package io.github.defective4.audioanalyzer;
+package io.github.defective4.audioanalyzer.app;
 
-import static io.github.defective4.audioanalyzer.ProgramOptions.*;
+import static io.github.defective4.audioanalyzer.app.ProgramOptions.*;
 
 import java.nio.file.Path;
 import java.util.Arrays;
