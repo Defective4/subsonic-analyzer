@@ -24,7 +24,7 @@
                 <version>3.5.0</version>
                 <configuration>
                     <archive>
-                        <manifest><mainClass>io.github.defective4.audioanalyzer.CLI</mainClass></manifest>
+                        <manifest><mainClass>io.github.defective4.audioanalyzer.app.CLI</mainClass></manifest>
                     </archive>
                 </configuration>
             </plugin>
