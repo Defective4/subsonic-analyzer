@@ -55,6 +55,7 @@ public class App {
 
     private final SubsonicAPI api;
     private final Repository db;
+    private final Gson gson = new Gson();
     private final Logger logger = LoggerFactory.getLogger(CLI.class);
     private final Random random = new Random();
 
@@ -284,6 +285,36 @@ public class App {
         logger.info("Adding songs to the playlist...");
         for (Track t : similar) api.updatePlaylist(playlist.id(), t.id(), -1, pub);
         logger.info("Added {} songs to playlist {}!", similar.size(), playlist.name());
+    }
+
+    public void managePlaylist(String createNamed, String remove) throws IOException {
+        if (createNamed != null) {
+            logger.info("Creating a new playlist named \"{}\"...", createNamed);
+            Playlist pls = api.createPlaylist(createNamed);
+            logger.info("Playlit created!");
+            System.out.println(gson.toJson(pls));
+        }
+        if (remove != null) {
+            Playlist toRemove;
+            try {
+                toRemove = api.getPlaylist(remove);
+            } catch (SubsonicException e) {
+                if (e.getError().code() == 70) {
+                    logger.info("Getting a list of playlists...");
+                    toRemove = api.getPlaylists().stream().filter(pls -> pls.name().equals(remove)).findAny()
+                            .orElse(null);
+                } else {
+                    throw e;
+                }
+            }
+            if(toRemove!=null) {
+                logger.info("Deleting playlist \"{}\"", toRemove.name());
+                api.deletePlaylist(toRemove.id());
+                logger.info("Playlist deleted!");
+            } else {
+                logger.error("Playlist {} not found", remove);
+            }
+        }
     }
 
     public void printEnvironment(boolean uncensor) {

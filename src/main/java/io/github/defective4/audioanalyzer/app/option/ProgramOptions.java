@@ -26,51 +26,58 @@ public class ProgramOptions {
 
     public static final Options ANALYSIS_OPTIONS;
     public static final Options COMMON_OPTIONS;
+    @EnvironmentVariable("PLAYLIST_CREATE_NAME")
+    public static final Option CREATE_PLAYLIST_OPTION;
     @EnvironmentVariable(value = "DB_FILE", sensitive = true)
     public static final Option DB_LOCATION_OPTION;
     public static final String DEFAULT_DB = "./mood.sqlite";
     public static final String DEFAULT_ESSENTIA = "http://127.0.0.1:8000/";
     public static final int DEFAULT_LIMIT = 30;
+    @EnvironmentVariable("PLAYLIST_DELETE")
+    public static final Option DELETE_PLAYLIST_OPTION;
     public static final Options ENV_OPTIONS;
     @EnvironmentVariable("ENV_UNCENSOR")
     public static final Option ENV_UNCENSOR_OPTION;
     @EnvironmentVariable("FILTER_ARTIST")
     public static final Option FILTER_ARTIST_OPTION;
+    @EnvironmentVariable("GEN_BPM_FILTER")
+    public static final Option GEN_BPM_FILTER_OPTION;
+    @EnvironmentVariable("GEN_GENRE_FILTER")
+    public static final Option GEN_GENRE_FILTER_OPTION;
+    @EnvironmentVariable("GEN_INSTRUMENT_FILTER")
+    public static final Option GEN_INSTRUMENT_FILTER_OPTION;
+    @EnvironmentVariable("GEN_LIMIT")
+    public static final Option GEN_LIMIT_OPTION;
+    @EnvironmentVariable("GEN_MOOD_FILTER")
+    public static final Option GEN_MOOD_FILTER_OPTION;
+    public static final Option GEN_NAME_OPTION;
+    @EnvironmentVariable("GEN_PUBLIC")
+    public static final Option GEN_PUBLIC_OPTION;
+    @EnvironmentVariable("GEN_REPLACE_PLAYLIST")
+    public static final Option GEN_REPLACE_OPTION;
+    @EnvironmentVariable("GEN_SAME_ARTIST")
+    public static final Option GEN_SAME_ARTIST_OPTION;
+    @EnvironmentVariable("GEN_SAME_GENRE")
+    public static final Option GEN_SAME_GENRE_OPTION;
+    @EnvironmentVariable("GEN_SAME_INSTRUMENT")
+    public static final Option GEN_SAME_INSTRUMENT_OPTION;
+    @EnvironmentVariable("GEN_SAME_MOOD")
+    public static final Option GEN_SAME_MOOD_OPTION;
+    @EnvironmentVariable("GEN_SUFFLE_SIMILAR")
+    public static final Option GEN_SHUFFLE_SIMILAR_OPTION;
+    @EnvironmentVariable("GEN_SAME_INCLUDE_BPM")
+    public static final Option GEN_SIMILAR_INCLUDE_BPM;
+    @EnvironmentVariable("GEN_SIMILAR_SONG")
+    public static final Option GEN_SIMILAR_SONG_OPTION;
+    @EnvironmentVariable("GEN_VOCAL_FILTER")
+    public static final Option GEN_VOCALITY_FILTER_OPTION;
+    public static final Options GENERATOR_OPTIONS;
+
     public static final Option HELP_OPTION;
     @EnvironmentVariable(value = "SUBSONIC_PASSWORD", sensitive = true)
     public static final Option PASSWORD_OPTION;
+
     public static final Options PLAYLIST_OPTIONS;
-    @EnvironmentVariable("PLS_BPM_FILTER")
-    public static final Option PLS_BPM_FILTER_OPTION;
-    @EnvironmentVariable("PLS_GENRE_FILTER")
-    public static final Option PLS_GENRE_FILTER_OPTION;
-    @EnvironmentVariable("PLS_INSTRUMENT_FILTER")
-    public static final Option PLS_INSTRUMENT_FILTER_OPTION;
-    @EnvironmentVariable("PLS_LIMIT")
-    public static final Option PLS_LIMIT_OPTION;
-    @EnvironmentVariable("PLS_MOOD_FILTER")
-    public static final Option PLS_MOOD_FILTER_OPTION;
-    public static final Option PLS_NAME_OPTION;
-    @EnvironmentVariable("PLS_PUBLIC")
-    public static final Option PLS_PUBLIC_OPTION;
-    @EnvironmentVariable("PLS_REPLACE_PLAYLIST")
-    public static final Option PLS_REPLACE_OPTION;
-    @EnvironmentVariable("PLS_SAME_ARTIST")
-    public static final Option PLS_SAME_ARTIST_OPTION;
-    @EnvironmentVariable("PLS_SAME_GENRE")
-    public static final Option PLS_SAME_GENRE_OPTION;
-    @EnvironmentVariable("PLS_SAME_INSTRUMENT")
-    public static final Option PLS_SAME_INSTRUMENT_OPTION;
-    @EnvironmentVariable("PLS_SAME_MOOD")
-    public static final Option PLS_SAME_MOOD_OPTION;
-    @EnvironmentVariable("PLS_SUFFLE_SIMILAR")
-    public static final Option PLS_SHUFFLE_SIMILAR_OPTION;
-    @EnvironmentVariable("PLS_SAME_INCLUDE_BPM")
-    public static final Option PLS_SIMILAR_INCLUDE_BPM;
-    @EnvironmentVariable("PLS_SIMILAR_SONG")
-    public static final Option PLS_SIMILAR_SONG_OPTION;
-    @EnvironmentVariable("PLS_VOCAL_FILTER")
-    public static final Option PLS_VOCALITY_FILTER_OPTION;
 
     @EnvironmentVariable("STATS_OUTPUT_FILE")
     public static final Option ST_OUTPUT_OPTION;
@@ -92,9 +99,13 @@ public class ProgramOptions {
 
     static {
         // Define options
-        PLS_SHUFFLE_SIMILAR_OPTION = Option.builder().longOpt("shuffle-similar")
+        DELETE_PLAYLIST_OPTION = Option.builder("r").argName("playlist").numberOfArgs(1).longOpt("delete-playlist")
+                .desc("Delete a playlist by its name or ID.").build();
+        CREATE_PLAYLIST_OPTION = Option.builder("c").argName("name").numberOfArgs(1).longOpt("create-playlist")
+                .desc("Create a new playlist with the given name and print info about it to standard output.").build();
+        GEN_SHUFFLE_SIMILAR_OPTION = Option.builder().longOpt("shuffle-similar")
                 .desc("If enabled, similar songs will be added to the playlist in a random order.").build();
-        PLS_SAME_ARTIST_OPTION = Option.builder().longOpt("same-artist")
+        GEN_SAME_ARTIST_OPTION = Option.builder().longOpt("same-artist")
                 .desc("Filter songs with the same artist as in --similar-song").build();
         FILTER_ARTIST_OPTION = Option.builder().longOpt("artist-filter").numberOfArgs(1).argName("artist")
                 .desc("Filter tracks based on artist name. This option is case-insensitive.").build();
@@ -107,7 +118,7 @@ public class ProgramOptions {
         DB_LOCATION_OPTION = Option.builder("d")
                 .desc("SQLite database location (default " + ProgramOptions.DEFAULT_DB + ")").longOpt("db")
                 .numberOfArgs(1).argName("file").build();
-        PLS_VOCALITY_FILTER_OPTION = Option.builder().longOpt("vocality-filter").numberOfArgs(1).argName("expression")
+        GEN_VOCALITY_FILTER_OPTION = Option.builder().longOpt("vocality-filter").numberOfArgs(1).argName("expression")
                 .desc("Filter tracks by their vocality." + "Less than 50% is instrumental, more than 50% is vocal."
                         + "(Example expression: \">50\"." + "This filters tracks with more than 50% vocal score.")
                 .converter(new IntegerExpressionConverter()).build();
@@ -127,18 +138,18 @@ public class ProgramOptions {
                 .argName("pass").required().build();
         USER_OPTION = Option.builder("u").desc("Subsonic username (Required)").longOpt("user").numberOfArgs(1)
                 .argName("username").required().build();
-        PLS_BPM_FILTER_OPTION = Option.builder().longOpt("bpm-filter").argName("filter expr.").numberOfArgs(1)
+        GEN_BPM_FILTER_OPTION = Option.builder().longOpt("bpm-filter").argName("filter expr.").numberOfArgs(1)
                 .desc("Filter songs by their BPM. You can use > and < (Example: >70 for songs with more than 70 BPM)")
                 .converter(new IntegerExpressionConverter()).build();
-        PLS_SIMILAR_INCLUDE_BPM = Option.builder().longOpt("include-bpm")
+        GEN_SIMILAR_INCLUDE_BPM = Option.builder().longOpt("include-bpm")
                 .desc("Include tempo calculations in similar songs analysis.").build();
-        PLS_SAME_GENRE_OPTION = Option.builder().longOpt("same-genre").desc(
+        GEN_SAME_GENRE_OPTION = Option.builder().longOpt("same-genre").desc(
                 "If enabled, and --similar-song is used, only songs with the same genre as the base will be matched.")
                 .build();
-        PLS_SAME_INSTRUMENT_OPTION = Option.builder().longOpt("same-instrument").desc(
+        GEN_SAME_INSTRUMENT_OPTION = Option.builder().longOpt("same-instrument").desc(
                 "If enabled, and --similar-song is used, only songs with the same instrument as the base will be matched.")
                 .build();
-        PLS_SAME_MOOD_OPTION = Option.builder().longOpt("same-mood").desc(
+        GEN_SAME_MOOD_OPTION = Option.builder().longOpt("same-mood").desc(
                 "If enabled, and --similar-song is used, only songs with the same mood as the base will be matched.")
                 .build();
 
@@ -148,26 +159,26 @@ public class ProgramOptions {
         AN_ALL_OPTION = Option.builder("a").desc("Analyze all tracks, even if they are present in the database.")
                 .longOpt("all").build();
 
-        PLS_GENRE_FILTER_OPTION = Option.builder().longOpt("genre-filter").numberOfArgs(1).argName("genre")
+        GEN_GENRE_FILTER_OPTION = Option.builder().longOpt("genre-filter").numberOfArgs(1).argName("genre")
                 .desc("Filter songs based on their genre. Pass ?list to list available genres. Regex IS supported.")
                 .build();
-        PLS_INSTRUMENT_FILTER_OPTION = Option.builder().longOpt("instrument-filter").numberOfArgs(1)
+        GEN_INSTRUMENT_FILTER_OPTION = Option.builder().longOpt("instrument-filter").numberOfArgs(1)
                 .argName("instrument")
                 .desc("Filter songs based on their primary instrument. Pass ?list to list available instruments.")
                 .build();
-        PLS_LIMIT_OPTION = Option.builder().argName("n").numberOfArgs(1).longOpt("limit")
+        GEN_LIMIT_OPTION = Option.builder().argName("n").numberOfArgs(1).longOpt("limit")
                 .desc("Limit the playlists to n tracks. (Default " + DEFAULT_LIMIT + ")").converter(Integer::parseInt)
                 .build();
-        PLS_MOOD_FILTER_OPTION = Option.builder().longOpt("mood-filter").numberOfArgs(1).argName("mood")
+        GEN_MOOD_FILTER_OPTION = Option.builder().longOpt("mood-filter").numberOfArgs(1).argName("mood")
                 .desc("Filter songs based on their mood. Pass ?list to list available moods.").build();
-        PLS_NAME_OPTION = Option.builder().longOpt("playlist-name").numberOfArgs(1).argName("name")
+        GEN_NAME_OPTION = Option.builder().longOpt("playlist-name").numberOfArgs(1).argName("name")
                 .desc("Human readable name of the new playlist. Required if --replace-playlist is not used.").build();
-        PLS_PUBLIC_OPTION = Option.builder().longOpt("public").desc("If present, the NEW playlist will be public.")
+        GEN_PUBLIC_OPTION = Option.builder().longOpt("public").desc("If present, the NEW playlist will be public.")
                 .build();
-        PLS_REPLACE_OPTION = Option.builder().longOpt("replace-playlist").numberOfArgs(1).argName("id").desc(
+        GEN_REPLACE_OPTION = Option.builder().longOpt("replace-playlist").numberOfArgs(1).argName("id").desc(
                 "Replace an existing playlist instead of creating a new one. This will remove all songs from an existing playlist in favor of new ones.")
                 .build();
-        PLS_SIMILAR_SONG_OPTION = Option.builder().longOpt("similar-song").numberOfArgs(1).argName("song")
+        GEN_SIMILAR_SONG_OPTION = Option.builder().longOpt("similar-song").numberOfArgs(1).argName("song")
                 .desc("ID or name of a base song to find similar songs to it.").build();
         SUBSONIC_URL_OPTION = Option.builder("s").desc("Subsonic instance URL (Required)").longOpt("url")
                 .numberOfArgs(1).argName("url").required().build();
@@ -179,18 +190,21 @@ public class ProgramOptions {
                 .addOption(AN_TENSORFLOW_OPTION).addOption(ProgramOptions.USER_OPTION)
                 .addOption(ProgramOptions.PASSWORD_OPTION).addOption(SUBSONIC_URL_OPTION)
                 .addOption(FILTER_ARTIST_OPTION).addOption(AN_FILTER_ALBUM_ARTIST_OPTION);
-        PLAYLIST_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(PLS_NAME_OPTION)
+        GENERATOR_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(GEN_NAME_OPTION)
                 .addOption(ProgramOptions.USER_OPTION).addOption(ProgramOptions.PASSWORD_OPTION)
-                .addOption(PLS_GENRE_FILTER_OPTION).addOption(PLS_INSTRUMENT_FILTER_OPTION).addOption(PLS_LIMIT_OPTION)
-                .addOption(PLS_MOOD_FILTER_OPTION).addOption(PLS_PUBLIC_OPTION).addOption(PLS_REPLACE_OPTION)
-                .addOption(PLS_SIMILAR_SONG_OPTION).addOption(PLS_SAME_GENRE_OPTION).addOption(PLS_SAME_MOOD_OPTION)
-                .addOption(PLS_SAME_INSTRUMENT_OPTION).addOption(PLS_SIMILAR_INCLUDE_BPM)
-                .addOption(PLS_BPM_FILTER_OPTION).addOption(SUBSONIC_URL_OPTION).addOption(PLS_VOCALITY_FILTER_OPTION)
-                .addOption(PLS_SAME_ARTIST_OPTION).addOption(FILTER_ARTIST_OPTION)
-                .addOption(PLS_SHUFFLE_SIMILAR_OPTION);
+                .addOption(GEN_GENRE_FILTER_OPTION).addOption(GEN_INSTRUMENT_FILTER_OPTION).addOption(GEN_LIMIT_OPTION)
+                .addOption(GEN_MOOD_FILTER_OPTION).addOption(GEN_PUBLIC_OPTION).addOption(GEN_REPLACE_OPTION)
+                .addOption(GEN_SIMILAR_SONG_OPTION).addOption(GEN_SAME_GENRE_OPTION).addOption(GEN_SAME_MOOD_OPTION)
+                .addOption(GEN_SAME_INSTRUMENT_OPTION).addOption(GEN_SIMILAR_INCLUDE_BPM)
+                .addOption(GEN_BPM_FILTER_OPTION).addOption(SUBSONIC_URL_OPTION).addOption(GEN_VOCALITY_FILTER_OPTION)
+                .addOption(GEN_SAME_ARTIST_OPTION).addOption(FILTER_ARTIST_OPTION)
+                .addOption(GEN_SHUFFLE_SIMILAR_OPTION);
         STATS_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(ST_PRINT_FORMAT_OPTION)
                 .addOption(ST_SONG_OPTION).addOption(ST_OUTPUT_OPTION);
         ENV_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(ENV_UNCENSOR_OPTION);
+        PLAYLIST_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(ProgramOptions.USER_OPTION)
+                .addOption(ProgramOptions.PASSWORD_OPTION).addOption(SUBSONIC_URL_OPTION)
+                .addOption(CREATE_PLAYLIST_OPTION).addOption(DELETE_PLAYLIST_OPTION);
 
         ENV_VARIABLES = getEnvironmentVariables();
     }

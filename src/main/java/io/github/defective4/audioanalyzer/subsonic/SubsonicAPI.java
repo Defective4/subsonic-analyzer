@@ -59,6 +59,10 @@ public class SubsonicAPI {
         return request("createPlaylist", Map.of("name", name)).playlist();
     }
 
+    public void deletePlaylist(String id) throws IOException {
+        request("deletePlaylist", Map.of("id", id));
+    }
+
     public InputStream download(Entity entity) throws IOException {
         return URI.create(baseURL + "download" + constructQueryString(Map.of("id", entity.id()))).toURL().openStream();
     }
@@ -102,6 +106,10 @@ public class SubsonicAPI {
 
     public Playlist getPlaylist(String id) throws IOException {
         return request("getPlaylist", Map.of("id", id)).playlist();
+    }
+
+    public List<Playlist> getPlaylists() throws IOException {
+        return List.of(request("getPlaylists", Map.of()).playlists().playlist());
     }
 
     public SubsonicResponse ping() throws IOException {
