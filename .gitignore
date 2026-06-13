@@ -8,3 +8,5 @@
 /dependency-reduced-pom.xml
 /__pycache__/
 /*.bak
+/*.deb
+/debian/usr

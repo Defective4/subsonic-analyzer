@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /usr/share/subsonic-analyzer/analyzer
+python3 -m venv venv
+source venv/bin/activate
+pip install essentia-tensorflow fastapi uvicorn
