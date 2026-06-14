@@ -41,6 +41,7 @@ import io.github.defective4.audioanalyzer.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.expr.NumericExpression;
 import io.github.defective4.audioanalyzer.format.MarkdownTableWriter;
 import io.github.defective4.audioanalyzer.format.PrintFormat;
+import io.github.defective4.audioanalyzer.format.TableWriter;
 import io.github.defective4.audioanalyzer.ml.AnalysisState;
 import io.github.defective4.audioanalyzer.ml.ModelLoader;
 import io.github.defective4.audioanalyzer.ml.Repository;
@@ -430,8 +431,11 @@ public class App {
                 case JSON -> { new Gson().toJson(tracks, writer); }
                 case JSON_PRETTY -> { new GsonBuilder().setPrettyPrinting().create().toJson(tracks, writer); }
                 case MARKDOWN -> {
-                    try (MarkdownTableWriter md = new MarkdownTableWriter(writer, new String[] { "Id", "Name", "Artist",
-                            "Mood", "Instrument", "Genre", "BPM", "Failed", "Failed reason" })) {
+                    String[] cols = new String[] { "Id", "Name", "Artist", "Mood", "Instrument", "Genre", "BPM",
+                            "Failed", "Failed reason" };
+                    try (TableWriter md = switch (printFormat) {
+                        default -> new MarkdownTableWriter(writer, cols);
+                    }) {
                         md.writeLines(tracks.stream()
                                 .map(track -> new String[] { track.id(), track.name(), track.artist(), track.mood(),
                                         track.instrument(), track.genre(), Integer.toString(track.bpm()),

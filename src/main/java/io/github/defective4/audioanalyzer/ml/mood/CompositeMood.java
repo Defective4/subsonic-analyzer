@@ -25,7 +25,9 @@ public record CompositeMood(Map<String, NumericExpression> scoreFilters, Numeric
     public boolean matches(Track track) {
         if (!bpmFilter.matches(track.bpm())) return false;
         for (Entry<String, NumericExpression> entry : scoreFilters.entrySet()) {
-            if (track.scores().get(entry.getKey()) == null || !entry.getValue().matches(track.scores().get(entry.getKey()))) return false;
+            if (track.scores().get(entry.getKey()) == null
+                    || !entry.getValue().matches(track.scores().get(entry.getKey())))
+                return false;
         }
         return true;
     }

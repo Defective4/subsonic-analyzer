@@ -10,5 +10,6 @@ import java.lang.annotation.Target;
 @Target(FIELD)
 public @interface EnvironmentVariable {
     boolean sensitive() default false;
+
     String value();
 }

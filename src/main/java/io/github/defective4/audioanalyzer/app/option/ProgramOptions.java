@@ -149,8 +149,8 @@ public class ProgramOptions {
                 .build();
         ST_PRINT_FORMAT_OPTION = Option.builder("p")
                 .desc("(Required) Statistics print format. Available values are: " + String.join(", ",
-                        Arrays.stream(PrintFormat.values()).map(e -> e.name().toLowerCase()).toArray(String[]::new)
-                                + "."))
+                        Arrays.stream(PrintFormat.values()).map(e -> e.name().toLowerCase()).toArray(String[]::new))
+                        + ".")
                 .longOpt("print-format").argName("format").numberOfArgs(1).required()
                 .converter(new EnumConverter<>(PrintFormat.class)).build();
         PASSWORD_OPTION = Option.builder("p").desc("Subsonic password (Required)").longOpt("password").numberOfArgs(1)

@@ -1,17 +1,14 @@
 package io.github.defective4.audioanalyzer.format;
 
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Arrays;
 
-public class MarkdownTableWriter extends PrintWriter {
-    private final String[] columns;
-
+public class MarkdownTableWriter extends TableWriter {
     public MarkdownTableWriter(Writer writer, String[] columns) {
-        super(writer);
-        this.columns = columns;
+        super(writer, columns);
     }
 
+    @Override
     public void writeLines(String[][] values) {
         if (values == null || Arrays.stream(values).anyMatch(v -> v.length != columns.length))
             throw new IllegalArgumentException("Values' array length is not the same as the number of counts.");
