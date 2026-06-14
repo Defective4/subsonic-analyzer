@@ -20,7 +20,7 @@ RUN apt-get install -y python3-venv python3-pip
 RUN apt-get clean
 RUN python3 -m venv /app/venv
 
-RUN bash -c "echo '#!/bin/java -jar' > /bin/analyzer; cat subsonic.jar >> /bin/analyzer; chmod +x /bin/analyzer; source ./venv/bin/activate; pip install uvicorn essentia-tensorflow fastapi; java -jar subsonic.jar models --update --base-url http://raspberry.local/ml/essentia.upf.edu/models/"
+RUN bash -c "echo '#!/bin/java -jar' > /bin/analyzer; cat subsonic.jar >> /bin/analyzer; chmod +x /bin/analyzer; source ./venv/bin/activate; pip install uvicorn essentia-tensorflow fastapi; java -jar subsonic.jar models --update"
 
 EXPOSE 8000/tcp
 ENTRYPOINT ["bash", "-c", "cd /app; source venv/bin/activate; uvicorn --host 0.0.0.0 analyzer:api"]

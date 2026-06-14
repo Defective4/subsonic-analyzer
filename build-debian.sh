@@ -1,5 +1,5 @@
 #!/bin/bash
-JRE_URL=https://raspberry.local/java/OpenJDK21U-jre_x64_linux_hotspot_21.0.11_10.tar.gz
+JRE_URL=https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.11%2B10/OpenJDK21U-jre_x64_linux_hotspot_21.0.11_10.tar.gz
 DEB_SHARE=debian/usr/share/subsonic-analyzer
 BIN_DIR=debian/usr/bin
 MAIN_BIN=$BIN_DIR/subsonic-analysis-tool
