@@ -47,7 +47,7 @@ docker container exec subsonic-analyzer-analyzer-1 analyzer [command] [args...]
 - Download the latest Debian package from [releases](https://github.com/Defective4/subsonic-analyzer/releases/latest)
 - Install the package:
 ```bash
-VERSION=0.0.1-SNAPSHOT
+VERSION=0.0.1
 dpkg -i subsonic-analyzer-$VERSION.deb
 ```
 - Create a dedicated operating directory and download required models:

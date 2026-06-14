@@ -1,6 +1,6 @@
 Package: subsonic-analyzer
 Package-Type: deb
-Version: 0.0.1-SNAPSHOT
+Version: 0.0.1
 Maintainer: Defective <def3ctive4@gmail.com>
 Description: Essentia Tensorflow powered music analysis tool for Subsonic-compatible instances 
 Architecture: amd64

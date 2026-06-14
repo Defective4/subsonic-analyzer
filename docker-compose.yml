@@ -2,10 +2,10 @@ name: subsonic-analyzer
 
 services:
     analyzer:
-        image: subsonic-analyzer:0.0.1-SNAPSHOT
+        image: subsonic-analyzer:0.0.1
         build:
             tags:
-                - "subsonic-analyzer:0.0.1-SNAPSHOT"
+                - "subsonic-analyzer:0.0.1"
             context: .
         ports:
             - 8000:8000
