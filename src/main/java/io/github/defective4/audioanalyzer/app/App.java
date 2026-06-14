@@ -71,6 +71,8 @@ public class App {
     public App(String dbFile, String username, char[] password, String url, String analyzerURL)
             throws SQLException, IOException {
         this.analyzerURL = analyzerURL;
+        File dbf = new File(dbFile);
+        if (!dbf.getParentFile().isDirectory()) dbf.getParentFile().mkdirs();
         db = new Repository("jdbc:sqlite:" + dbFile);
         api = username != null ? new SubsonicAPI(username, password, url) : null;
     }

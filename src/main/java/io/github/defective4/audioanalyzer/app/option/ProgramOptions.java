@@ -34,7 +34,7 @@ public class ProgramOptions {
     public static final Option CREATE_PLAYLIST_OPTION;
     @EnvironmentVariable(value = "DB_FILE", sensitive = true)
     public static final Option DB_LOCATION_OPTION;
-    public static final String DEFAULT_DB = "./mood.sqlite";
+    public static final String DEFAULT_DB = "./data/analysis.sqlite";
     public static final String DEFAULT_ESSENTIA = "http://127.0.0.1:8000/";
     public static final int DEFAULT_LIMIT = 30;
     public static final URL DEFAULT_MODELS_BASE_URL;
