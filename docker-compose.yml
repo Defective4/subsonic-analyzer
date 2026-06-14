@@ -1,0 +1,13 @@
+name: subsonic-analyzer
+
+services:
+    analyzer:
+        image: subsonic-analyzer:0.0.1-SNAPSHOT
+        build:
+            tags:
+                - "subsonic-analyzer:0.0.1-SNAPSHOT"
+            context: .
+        ports:
+            - 8000:8000
+        volumes:
+            - ./data:/app/data
