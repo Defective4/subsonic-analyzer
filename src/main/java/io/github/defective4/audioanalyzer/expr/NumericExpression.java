@@ -37,9 +37,25 @@ public class NumericExpression extends Number {
         return number.longValue();
     }
 
+    public boolean matches(Number compareTo) {
+        int result = getDiff(compareTo);
+        return switch (type) {
+            case EQUAL_TO -> result == 0;
+            case LESS_THAN -> result <= 0;
+            case MORE_THAN -> result >= 0;
+            default -> throw new IllegalStateException("Invalid expr type");
+        };
+    }
+
     @Override
     public String toString() {
         return "NumericExpression [number=" + number + ", type=" + type + "]";
+    }
+
+    private int getDiff(Number compareTo) {
+        double compare = compareTo.doubleValue();
+        double self = number.doubleValue();
+        return compare == self ? 0 : compare >= self ? 1 : -1;
     }
 
 }

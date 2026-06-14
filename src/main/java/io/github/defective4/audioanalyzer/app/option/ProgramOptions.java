@@ -47,6 +47,8 @@ public class ProgramOptions {
     public static final Option FILTER_ARTIST_OPTION;
     @EnvironmentVariable("GEN_BPM_FILTER")
     public static final Option GEN_BPM_FILTER_OPTION;
+    @EnvironmentVariable("GEN_COMPOSITE_MOOD")
+    public static final Option GEN_COMPOSITE_MOOD;
     @EnvironmentVariable("GEN_GENRE_FILTER")
     public static final Option GEN_GENRE_FILTER_OPTION;
     @EnvironmentVariable("GEN_INSTRUMENT_FILTER")
@@ -109,6 +111,8 @@ public class ProgramOptions {
         } catch (MalformedURLException e1) {
             throw new IllegalStateException(e1);
         }
+        GEN_COMPOSITE_MOOD = Option.builder("m").longOpt("composite-mood").numberOfArgs(1)
+                .desc("Filter songs by their composite moods. Pass ?list to print a list of composite moods.").build();
         MODELS_BASE_URL = Option.builder().longOpt("base-url").numberOfArgs(1).argName("url")
                 .converter(new URLConverter())
                 .desc("Base update URL for models. (Default: %s)".formatted(DEFAULT_MODELS_BASE_URL)).build();
@@ -213,7 +217,7 @@ public class ProgramOptions {
                 .addOption(GEN_SAME_INSTRUMENT_OPTION).addOption(GEN_SIMILAR_INCLUDE_BPM)
                 .addOption(GEN_BPM_FILTER_OPTION).addOption(SUBSONIC_URL_OPTION).addOption(GEN_VOCALITY_FILTER_OPTION)
                 .addOption(GEN_SAME_ARTIST_OPTION).addOption(FILTER_ARTIST_OPTION).addOption(GEN_SHUFFLE_SIMILAR_OPTION)
-                .addOption(GEN_PRINT_JSON_OPTION);
+                .addOption(GEN_PRINT_JSON_OPTION).addOption(GEN_COMPOSITE_MOOD);
         STATS_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(ST_PRINT_FORMAT_OPTION)
                 .addOption(ST_SONG_OPTION).addOption(ST_OUTPUT_OPTION);
         ENV_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(ENV_UNCENSOR_OPTION);

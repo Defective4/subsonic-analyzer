@@ -73,9 +73,11 @@ public class CLI {
             String filterPlaylist = getOptionValue(cli, FILTER_ARTIST_OPTION);
             boolean shuffleSimilar = hasOption(cli, GEN_SHUFFLE_SIMILAR_OPTION);
             boolean printJSON = hasOption(cli, GEN_PRINT_JSON_OPTION);
+            String compositeMoodName = getOptionValue(cli, GEN_COMPOSITE_MOOD);
+
             prog.groupTracks(song, mood, instrument, genre, playlistName, replacePlaylist, limit, newPublic,
                     similarGenre, similarMood, similarInstrument, tempo, bpmExpr, vocalExpr, sameArtist, filterPlaylist,
-                    shuffleSimilar, printJSON);
+                    shuffleSimilar, printJSON, compositeMoodName);
             return true;
         }
 

@@ -48,6 +48,8 @@ import io.github.defective4.audioanalyzer.ml.TensorflowAnalyzer;
 import io.github.defective4.audioanalyzer.ml.model.AnalysisResponse;
 import io.github.defective4.audioanalyzer.ml.model.ModelMetadata;
 import io.github.defective4.audioanalyzer.ml.model.Track;
+import io.github.defective4.audioanalyzer.ml.mood.CompositeMood;
+import io.github.defective4.audioanalyzer.ml.mood.MoodTypes;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
 import io.github.defective4.audioanalyzer.subsonic.model.Entity;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
@@ -185,7 +187,21 @@ public class App {
             String playlistName, String replacePlaylist, int limit, boolean newPublic, boolean sameGenre,
             boolean sameMood, boolean sameInstrument, boolean includeTempo, NumericExpression bpmExpr,
             NumericExpression vocalExpr, boolean sameArtist, String filterArtist, boolean shuffleSimilar,
-            boolean printJSON) throws SQLException, IOException, InterruptedException {
+            boolean printJSON, String compositeMoodName) throws SQLException, IOException, InterruptedException {
+        CompositeMood mood = null;
+        if (compositeMoodName != null) {
+            if (compositeMoodName.equalsIgnoreCase("?list")) {
+                System.out.println("List of available composite moods:");
+                for (String mn : MoodTypes.getMoodNames()) System.out.println(" - %s".formatted(mn));
+                return;
+            }
+            mood = MoodTypes.getMood(compositeMoodName);
+            if (mood == null) {
+                logger.error("Composite mood \"{}\" does not exist. Pass ?list to list available composite moods.",
+                        compositeMoodName);
+                return;
+            }
+        }
         checkAPI();
         if (db.getAnalysisState() == AnalysisState.UNANALYZED) {
             logger.error(ERROR_UNANALYZED);
@@ -274,7 +290,11 @@ public class App {
             if (sameMood) stream = stream.filter(track -> track.mood().equals(base.mood()));
 
             if (sameArtist) stream = stream.filter(t -> t.artist().equals(base.artist()));
+        }
 
+        if (mood != null) {
+            CompositeMood localMood = mood;
+            stream = stream.filter(localMood::matches);
         }
 
         if (bpmExpr != null) {

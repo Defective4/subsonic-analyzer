@@ -53,6 +53,7 @@ public class ModelLoader {
     private static final Map<String, String> AVAILABLE_MODELS = Map.of("genres",
             "genre_discogs400-discogs-effnet-1.json", "instruments", "mtg_jamendo_instrument-discogs-effnet-1.json",
             "moods", "mtg_jamendo_moodtheme-discogs-effnet-1.json");
+
     private final Gson gson = new Gson();
     private final Map<String, ModelMetadata> loadedModels = new HashMap<>();
     private final Logger logger;
