@@ -16,7 +16,6 @@ import java.util.Map.Entry;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
-import io.javalin.http.HandlerType;
 
 public class AnalyzerProxy {
     private final Javalin javalin;
@@ -28,8 +27,7 @@ public class AnalyzerProxy {
         this.targetBaseURL = URI.create(targetBaseURL).toURL().toString();
         this.localPort = localPort;
         this.localHost = localHost;
-        javalin = Javalin
-                .create(cfg -> { cfg.routes.apiBuilder(() -> { after(ctx -> { relayRequest(ctx); }); }); });
+        javalin = Javalin.create(cfg -> { cfg.routes.apiBuilder(() -> { after(ctx -> { relayRequest(ctx); }); }); });
     }
 
     public void start() {
@@ -44,10 +42,11 @@ public class AnalyzerProxy {
                     .toURL().openConnection();
             con.setRequestMethod(ctx.method().name());
             copyHeaders(ctx.headerMap(), con);
-            if (ctx.method() != HandlerType.GET) {
+            String body = ctx.body();
+            if (body != null && !body.isEmpty()) {
                 con.setDoOutput(true);
                 try (Writer wr = new OutputStreamWriter(con.getOutputStream())) {
-                    wr.write(ctx.body());
+                    wr.write(body);
                 }
             }
 
