@@ -33,9 +33,7 @@ public class AnalyzerProxy {
     private final Javalin javalin;
     private final String localHost;
     private final int localPort;
-    private final Map<String, ResponseModifier> replacers = Map.of("/rest/getSimilarSongs", (props, obj) -> {
-        
-    });
+    private final Map<String, ResponseModifier> replacers;
     private final Repository repo;
 
     private final String targetBaseURL;
@@ -47,6 +45,9 @@ public class AnalyzerProxy {
         this.localHost = localHost;
         javalin = Javalin.create(cfg -> { cfg.routes.apiBuilder(() -> { after(ctx -> { relayRequest(ctx); }); }); });
         this.repo = repo;
+        replacers = Map.of("/rest/getSimilarSongs", (props, obj) -> {
+            
+        });
     }
 
     public void start() {

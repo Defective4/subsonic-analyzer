@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 
@@ -37,22 +38,42 @@ public class SubsonicAPI {
     private static final String CLIENT_ID = "audio-analyzer";
     private static final String VERSION = "1.16.1";
     private final String baseURL;
+    private final String clientId;
     private final Gson gson = new GsonBuilder().create();
     private final HexFormat hex = HexFormat.of();
     private final MessageDigest md5;
     private final char[] password;
+    private final String salt;
+    private final String token;
     private final String username;
+    private final String version;
 
     public SubsonicAPI(String username, char[] password, String baseURL) throws MalformedURLException {
-        this.username = username;
-        this.password = password;
+        this(baseURL, password, username, VERSION, CLIENT_ID, null, null);
+    }
+
+    public SubsonicAPI(String baseURL, char[] password, String username, String version, String clientId, String token,
+            String salt) throws MalformedURLException {
         try {
             md5 = MessageDigest.getInstance("md5");
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
-        URI.create(baseURL).toURL();
-        this.baseURL = baseURL + "rest/";
+        this.baseURL = URI.create(baseURL).toURL().toString() + "rest/";
+        this.password = password;
+        this.username = Objects.requireNonNull(username);
+        this.version = Objects.requireNonNull(version);
+        this.clientId = Objects.requireNonNull(clientId);
+        this.token = token;
+        this.salt = salt;
+
+        if ((password == null || password.length == 0) && (token == null || salt == null))
+            throw new IllegalArgumentException("Missing password, token, or salt argument");
+    }
+
+    public SubsonicAPI(String baseURL, Map<String, String> props) throws MalformedURLException {
+        this(baseURL, props.getOrDefault("p", "").toCharArray(), props.get("u"), props.get("v"), props.get("c"),
+                props.get("t"), props.get("s"));
     }
 
     public Playlist createPlaylist(String name) throws IOException {
@@ -133,10 +154,15 @@ public class SubsonicAPI {
         Map<String, Object> params = new HashMap<>();
         String salt = generateSalt();
         params.put("u", username);
-        params.put("t", computeToken(salt));
-        params.put("s", salt);
-        params.put("v", VERSION);
-        params.put("c", CLIENT_ID);
+        if (token != null && salt != null) {
+            params.put("t", token);
+            params.put("s", this.salt);
+        } else {
+            params.put("t", computeToken(salt));
+            params.put("s", salt);
+        }
+        params.put("v", version);
+        params.put("c", clientId);
         params.put("f", "json");
         params.putAll(queryParameters);
         StringBuilder queryBuilder = new StringBuilder("?");
