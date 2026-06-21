@@ -85,6 +85,21 @@ public class Repository {
         }
     }
 
+    public Optional<Track> getTrackById(String id) throws SQLException {
+        List<String> cols = getColumns();
+        try (PreparedStatement st = con
+                .prepareStatement("select * from `moods` where (`trackId` = ?) and `failed` = false")) {
+            st.setString(1, id);
+            try (ResultSet set = st.executeQuery()) {
+                if (set.next()) {
+                    Optional<Track> of = Optional.of(trackFromResultSet(set, cols));
+                    return of;
+                }
+                return Optional.empty();
+            }
+        }
+    }
+
     public Optional<Track> getTrackByIdOrName(String idOrName) throws SQLException {
         List<String> cols = getColumns();
         try (PreparedStatement st = con.prepareStatement(

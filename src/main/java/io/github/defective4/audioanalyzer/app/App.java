@@ -282,14 +282,10 @@ public class App {
         logger.info("Finding matching tracks...");
         if (baseOp.isPresent()) {
             Track base = baseOp.get();
-            stream = stream.sorted((t1, t2) -> {
-                double diff = base.calculateSimilarity(t1, includeTempo) - base.calculateSimilarity(t2, includeTempo);
-                return diff < 0 ? -1 : diff > 0 ? 1 : 0;
-            });
+            stream = sortTrackStream(includeTempo, stream, base);
             if (sameGenre) stream = stream.filter(track -> track.genre().equals(base.genre()));
             if (sameInstrument) stream = stream.filter(track -> track.instrument().equals(base.instrument()));
             if (sameMood) stream = stream.filter(track -> track.mood().equals(base.mood()));
-
             if (sameArtist) stream = stream.filter(t -> t.artist().equals(base.artist()));
         }
 
@@ -468,5 +464,13 @@ public class App {
     private void printAbortedWarning() throws InterruptedException {
         logger.warn("Last analysis was aborted. The database might be incomplete, consider reanalyzing.");
         Thread.sleep(1000);
+    }
+
+    public static Stream<Track> sortTrackStream(boolean includeTempo, Stream<Track> stream, Track base) {
+        stream = stream.sorted((t1, t2) -> {
+            double diff = base.calculateSimilarity(t1, includeTempo) - base.calculateSimilarity(t2, includeTempo);
+            return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+        });
+        return stream;
     }
 }
