@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import io.github.defective4.audioanalyzer.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.subsonic.model.AlbumList;
@@ -54,6 +56,7 @@ public class SubsonicAPI {
 
     public SubsonicAPI(String baseURL, char[] password, String username, String version, String clientId, String token,
             String salt) throws MalformedURLException {
+        if (!baseURL.endsWith("/")) baseURL = baseURL + "/";
         try {
             md5 = MessageDigest.getInstance("md5");
         } catch (NoSuchAlgorithmException e) {
@@ -133,6 +136,10 @@ public class SubsonicAPI {
         return List.of(request("getPlaylists", Map.of()).playlists().playlist());
     }
 
+    public JsonObject getRawSongData(String id) throws IOException {
+        return requestRaw("getSong", Map.of("id", id)).getAsJsonObject("song");
+    }
+
     public SubsonicResponse ping() throws IOException {
         return request("ping", Map.of());
     }
@@ -178,6 +185,14 @@ public class SubsonicAPI {
     }
 
     private SubsonicResponse request(String path, Map<String, Object> queryParameters)
+            throws JsonSyntaxException, SubsonicException, IOException {
+        SubsonicResponse response = gson.fromJson(requestRaw(path, queryParameters), SubsonicResponse.class);
+        SubsonicError error = response.error();
+        if (error != null) throw new SubsonicException("Error %s: %s".formatted(error.code(), error.message()), error);
+        return response;
+    }
+
+    private JsonObject requestRaw(String path, Map<String, Object> queryParameters)
             throws IOException, SubsonicException {
         HttpURLConnection con = null;
         try {
@@ -185,11 +200,7 @@ public class SubsonicAPI {
             con = (HttpURLConnection) URI.create(baseURL + path + queryString).toURL().openConnection();
             try (Reader reader = new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8)) {
                 JsonElement json = JsonParser.parseReader(reader).getAsJsonObject().get("subsonic-response");
-                SubsonicResponse response = gson.fromJson(json, SubsonicResponse.class);
-                SubsonicError error = response.error();
-                if (error != null)
-                    throw new SubsonicException("Error %s: %s".formatted(error.code(), error.message()), error);
-                return response;
+                return json.getAsJsonObject();
             }
         } finally {
             if (con != null) con.disconnect();

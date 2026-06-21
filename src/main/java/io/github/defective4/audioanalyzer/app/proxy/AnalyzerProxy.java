@@ -46,7 +46,7 @@ public class AnalyzerProxy {
         javalin = Javalin.create(cfg -> { cfg.routes.apiBuilder(() -> { after(ctx -> { relayRequest(ctx); }); }); });
         this.repo = repo;
         replacers = Map.of("/rest/getSimilarSongs", (props, obj) -> {
-            
+
         });
     }
 
