@@ -7,11 +7,19 @@ public class Playlist extends Entity {
     public String comment;
     public String coverArt;
     public String created;
-    public int duration;
+    public Integer duration;
     public Song[] entry;
     @SerializedName("public")
-    public boolean isPublic;
+    public Boolean isPublic;
     public String name;
     public String owner;
-    public int songCount;
+    public Integer songCount;
+
+    public Playlist() {}
+
+    public Playlist(String id, String name) {
+        this.name = name;
+        super.id = id;
+    }
+
 }

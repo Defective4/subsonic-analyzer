@@ -31,4 +31,13 @@ public class Song extends Entity {
     public String type;
     public int userRating;
     public int year;
+
+    public Song() {}
+
+    public Song(String id, boolean isDir, String title) {
+        super.id = id;
+        this.isDir = isDir;
+        this.title = title;
+    }
+
 }
