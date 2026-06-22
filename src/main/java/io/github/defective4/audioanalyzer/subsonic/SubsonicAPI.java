@@ -37,16 +37,25 @@ import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 
 public class SubsonicAPI {
     private static final String CLIENT_ID = "audio-analyzer";
+    private static final MessageDigest MD5;
     private static final String VERSION = "1.16.1";
+    static {
+        try {
+            MD5 = MessageDigest.getInstance("md5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
     private final String baseURL;
     private final String clientId;
     private final Gson gson = new GsonBuilder().create();
-    private final HexFormat hex = HexFormat.of();
-    private final MessageDigest md5;
+    private static final HexFormat hex = HexFormat.of();
     private final char[] password;
     private final String salt;
     private final String token;
+
     private final String username;
+
     private final String version;
 
     public SubsonicAPI(String username, char[] password, String baseURL) throws MalformedURLException {
@@ -56,11 +65,7 @@ public class SubsonicAPI {
     public SubsonicAPI(String baseURL, char[] password, String username, String version, String clientId, String token,
             String salt) throws MalformedURLException {
         if (!baseURL.endsWith("/")) baseURL = baseURL + "/";
-        try {
-            md5 = MessageDigest.getInstance("md5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+
         this.baseURL = URI.create(baseURL).toURL().toString() + "rest/";
         this.password = password;
         this.username = Objects.requireNonNull(username);
@@ -183,9 +188,9 @@ public class SubsonicAPI {
         return queryString.substring(0, queryBuilder.length() - 1);
     }
 
-    private String hash(String data) {
-        md5.reset();
-        return hex.formatHex(md5.digest(data.getBytes(StandardCharsets.UTF_8)));
+    private static String hash(String data) {
+        MD5.reset();
+        return hex.formatHex(MD5.digest(data.getBytes(StandardCharsets.UTF_8)));
     }
 
     private SubsonicResponse request(String path, Map<String, Object> queryParameters)
