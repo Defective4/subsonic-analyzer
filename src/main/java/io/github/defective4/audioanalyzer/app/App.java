@@ -52,8 +52,8 @@ import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.ml.mood.CompositeMood;
 import io.github.defective4.audioanalyzer.ml.mood.MoodTypes;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
-import io.github.defective4.audioanalyzer.subsonic.model.Entity;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
+import io.github.defective4.audioanalyzer.subsonic.model.Song;
 
 public class App {
 
@@ -88,7 +88,7 @@ public class App {
             Map<String, ModelMetadata> models = modelLoader.getLoadedModels();
             checkAPI();
             logger.info("Downloading track lists...");
-            List<Entity> songs = api.getAllMusic(logger, filterArtist, filterAlbumArtist);
+            List<Song> songs = api.getAllMusic(logger, filterArtist, filterAlbumArtist);
             logger.info("Downloaded information about %s songs".formatted(songs.size()));
             logger.info("Starting analysis...");
 
@@ -101,7 +101,7 @@ public class App {
 
             db.setAnalysisState(AnalysisState.ABORTED);
             for (int i = 0; i < songs.size(); i++) {
-                Entity song = songs.get(i);
+                Song song = songs.get(i);
                 if (ignore.contains(song.id)) {
                     logger.info("%s is already in database, skipped.".formatted(song.title));
                     continue;

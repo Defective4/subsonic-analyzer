@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.github.defective4.audioanalyzer.ml.model.Track;
-import io.github.defective4.audioanalyzer.subsonic.model.Entity;
+import io.github.defective4.audioanalyzer.subsonic.model.Song;
 
 public class Repository {
     private static final String ANALYSIS_STATUS_PROPERTY = "analysis_status";
@@ -125,7 +125,7 @@ public class Repository {
         }
     }
 
-    public void insertData(Entity song, Map<String, Float> values, String moodName, String instrumentName,
+    public void insertData(Song song, Map<String, Float> values, String moodName, String instrumentName,
             String genreName, float bpm, Exception failed) throws SQLException {
         List<String> columns = getColumns();
         for (Map.Entry<String, Float> entry : values.entrySet()) {

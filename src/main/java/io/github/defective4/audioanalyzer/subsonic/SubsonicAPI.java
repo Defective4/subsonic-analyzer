@@ -29,8 +29,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 import io.github.defective4.audioanalyzer.exception.SubsonicException;
-import io.github.defective4.audioanalyzer.subsonic.model.Entity;
+import io.github.defective4.audioanalyzer.subsonic.model.Album;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
+import io.github.defective4.audioanalyzer.subsonic.model.Song;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicError;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 
@@ -85,22 +86,22 @@ public class SubsonicAPI {
         request("deletePlaylist", Map.of("id", id));
     }
 
-    public InputStream download(Entity entity) throws IOException {
+    public InputStream download(Song entity) throws IOException {
         return URI.create(baseURL + "download" + constructQueryString(Map.of("id", entity.id))).toURL().openStream();
     }
 
-    public List<Entity> getAlbumList(int limit, int offset) throws IOException {
+    public List<Album> getAlbumList(int limit, int offset) throws IOException {
         return List
                 .of(gson.fromJson(requestRaw("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset))
-                        .getAsJsonObject("albumList").get("album"), Entity[].class));
+                        .getAsJsonObject("albumList").get("album"), Album[].class));
     }
 
-    public List<Entity> getAllAlbums(Logger logger, String filterAlbumArtist) throws IOException {
-        List<Entity> albums = new ArrayList<>();
+    public List<Album> getAllAlbums(Logger logger, String filterAlbumArtist) throws IOException {
+        List<Album> albums = new ArrayList<>();
         int offset = 0;
         int i = 0;
         while (true) {
-            List<Entity> as = getAlbumList(500, offset);
+            List<Album> as = getAlbumList(500, offset);
             logger.info("Downloaded chunk %s".formatted(++i));
             albums.addAll(as);
             if (as.size() == 500)
@@ -112,11 +113,11 @@ public class SubsonicAPI {
                 : albums.stream().filter(a -> a.artist.equalsIgnoreCase(filterAlbumArtist)).toList());
     }
 
-    public List<Entity> getAllMusic(Logger logger, String filterArtist, String filterAlbumArtist) throws IOException {
-        List<Entity> songs = new ArrayList<>();
-        List<Entity> albums = getAllAlbums(logger, filterAlbumArtist);
+    public List<Song> getAllMusic(Logger logger, String filterArtist, String filterAlbumArtist) throws IOException {
+        List<Song> songs = new ArrayList<>();
+        List<Album> albums = getAllAlbums(logger, filterAlbumArtist);
         int i = 0;
-        for (Entity album : albums) {
+        for (Album album : albums) {
             if (++i % 100 == 0) logger.info("Downloaded metadata for %s out of %s albums".formatted(i, albums.size()));
             songs.addAll(getMusicDirectory(album.id));
         }
@@ -124,10 +125,10 @@ public class SubsonicAPI {
                 : songs.stream().filter(s -> s.artist.equalsIgnoreCase(filterArtist)).toList());
     }
 
-    public List<Entity> getMusicDirectory(String id) throws IOException {
+    public List<Song> getMusicDirectory(String id) throws IOException {
         return List.of(gson.fromJson(
                 requestRaw("getMusicDirectory", Map.of("id", id)).getAsJsonObject("directory").get("child"),
-                Entity[].class));
+                Song[].class));
     }
 
     public Playlist getPlaylist(String id) throws IOException {
