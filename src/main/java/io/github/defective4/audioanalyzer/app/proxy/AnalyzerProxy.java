@@ -78,6 +78,10 @@ public class AnalyzerProxy {
             try {
                 SubsonicAPI api = new SubsonicAPI(targetBaseURL, props);
                 JsonArray pls = obj.getAsJsonObject("playlists").getAsJsonArray("playlist");
+                if (pls == null) {
+                    pls = new JsonArray();
+                    obj.getAsJsonObject("playlists").add("playlist", pls);
+                }
                 for (Playlist p : libraryManager.generateOrGetPlaylists(api, 30).values()) {
                     pls.add(gson.toJsonTree(p));
                 }

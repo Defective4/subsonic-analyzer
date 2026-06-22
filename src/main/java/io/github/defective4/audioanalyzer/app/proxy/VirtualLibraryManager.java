@@ -47,7 +47,7 @@ public class VirtualLibraryManager {
                 long l1 = o1.playCount;
                 long l2 = o2.playCount;
                 return l1 > l2 ? -1 : l2 > l1 ? 1 : 0;
-            }).limit(10).toList();
+            }).limit(5).toList();
 
             List<Track> baseTracks = new ArrayList<>();
             for (Song song : songs) {
@@ -79,6 +79,7 @@ public class VirtualLibraryManager {
             String date = FMT.format(new Date(System.currentTimeMillis()));
             fromRecent.changed = date;
             fromRecent.created = date;
+            fromRecent.coverArt = albums.get(0).coverArt;
 
             generatedPlaylists.put(user, Map.of(fromRecent.id, fromRecent));
         }
