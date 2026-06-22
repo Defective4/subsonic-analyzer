@@ -1,5 +1,6 @@
 package io.github.defective4.audioanalyzer.subsonic.model;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 public class Playlist extends Entity {
@@ -8,7 +9,7 @@ public class Playlist extends Entity {
     public String coverArt;
     public String created;
     public Integer duration;
-    public Song[] entry;
+    public JsonObject[] entry;
     @SerializedName("public")
     public Boolean isPublic;
     public String name;

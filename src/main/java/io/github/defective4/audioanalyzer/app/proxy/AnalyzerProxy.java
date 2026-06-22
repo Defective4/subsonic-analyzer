@@ -31,17 +31,19 @@ import io.github.defective4.audioanalyzer.app.App;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
+import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
 public class AnalyzerProxy {
     private final Gson gson = new Gson();
     private final Javalin javalin;
+    private final VirtualLibraryManager libraryManager;
     private final String localHost;
     private final int localPort;
     private final Map<String, List<String>> proposedSongs = new HashMap<>();
-    private final Map<String, ResponseModifier> replacers;
 
+    private final Map<String, ResponseModifier> replacers;
     private final Repository repo;
     private final String targetBaseURL;
 
@@ -57,7 +59,32 @@ public class AnalyzerProxy {
             });
         });
         this.repo = repo;
-        replacers = Map.of("/rest/getSimilarSongs", (props, obj) -> {
+        libraryManager = new VirtualLibraryManager(repo, targetBaseURL);
+        replacers = Map.of("/rest/getPlaylist", (props, obj) -> {
+            try {
+                String id = props.get("id");
+                if (id == null) return;
+                SubsonicAPI api = new SubsonicAPI(targetBaseURL, props);
+                Playlist playlist = libraryManager.generateOrGetPlaylists(api, 30).get(id);
+                if (playlist != null) {
+                    obj.addProperty("status", "ok");
+                    obj.remove("error");
+                    obj.add("playlist", gson.toJsonTree(playlist));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, "/rest/getPlaylists", (props, obj) -> {
+            try {
+                SubsonicAPI api = new SubsonicAPI(targetBaseURL, props);
+                JsonArray pls = obj.getAsJsonObject("playlists").getAsJsonArray("playlist");
+                for (Playlist p : libraryManager.generateOrGetPlaylists(api, 30).values()) {
+                    pls.add(gson.toJsonTree(p));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, "/rest/getSimilarSongs", (props, obj) -> {
             try {
                 String id = props.get("id");
                 if (id == null) return;

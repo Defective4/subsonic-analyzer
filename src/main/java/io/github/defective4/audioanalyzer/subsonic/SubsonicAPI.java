@@ -37,6 +37,7 @@ import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 
 public class SubsonicAPI {
     private static final String CLIENT_ID = "audio-analyzer";
+    private static final HexFormat hex = HexFormat.of();
     private static final MessageDigest MD5;
     private static final String VERSION = "1.16.1";
     static {
@@ -49,7 +50,6 @@ public class SubsonicAPI {
     private final String baseURL;
     private final String clientId;
     private final Gson gson = new GsonBuilder().create();
-    private static final HexFormat hex = HexFormat.of();
     private final char[] password;
     private final String salt;
     private final String token;
@@ -96,9 +96,12 @@ public class SubsonicAPI {
     }
 
     public List<Album> getAlbumList(int limit, int offset) throws IOException {
-        return List
-                .of(gson.fromJson(requestRaw("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset))
-                        .getAsJsonObject("albumList").get("album"), Album[].class));
+        return getAlbumList(limit, offset, "newest");
+    }
+
+    public List<Album> getAlbumList(int limit, int offset, String type) throws IOException {
+        return List.of(gson.fromJson(requestRaw("getAlbumList2", Map.of("type", type, "size", limit, "offset", offset))
+                .getAsJsonObject("albumList2").get("album"), Album[].class));
     }
 
     public List<Album> getAllAlbums(Logger logger, String filterAlbumArtist) throws IOException {
@@ -149,6 +152,10 @@ public class SubsonicAPI {
         return requestRaw("getSong", Map.of("id", id)).getAsJsonObject("song");
     }
 
+    public String getUsername() {
+        return username;
+    }
+
     public SubsonicResponse ping() throws IOException {
         return request("ping", Map.of());
     }
@@ -188,11 +195,6 @@ public class SubsonicAPI {
         return queryString.substring(0, queryBuilder.length() - 1);
     }
 
-    private static String hash(String data) {
-        MD5.reset();
-        return hex.formatHex(MD5.digest(data.getBytes(StandardCharsets.UTF_8)));
-    }
-
     private SubsonicResponse request(String path, Map<String, Object> queryParameters)
             throws JsonSyntaxException, SubsonicException, IOException {
         SubsonicResponse response = gson.fromJson(requestRaw(path, queryParameters), SubsonicResponse.class);
@@ -218,5 +220,10 @@ public class SubsonicAPI {
 
     private static String generateSalt() {
         return Long.toHexString(System.currentTimeMillis());
+    }
+
+    private static String hash(String data) {
+        MD5.reset();
+        return hex.formatHex(MD5.digest(data.getBytes(StandardCharsets.UTF_8)));
     }
 }
