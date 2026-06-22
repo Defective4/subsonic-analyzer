@@ -332,17 +332,17 @@ public class App {
                 }
                 throw e;
             }
-            pub = playlist.isPublic();
-            int songs = playlist.entry().length;
-            for (int i = 0; i < songs; i++) api.updatePlaylist(playlist.id(), null, songs - i - 1, pub);
+            pub = playlist.isPublic;
+            int songs = playlist.entry.length;
+            for (int i = 0; i < songs; i++) api.updatePlaylist(playlist.id, null, songs - i - 1, pub);
         } else {
             playlist = api.createPlaylist(playlistName);
             pub = newPublic;
-            api.updatePlaylist(playlist.id(), null, -1, pub);
+            api.updatePlaylist(playlist.id, null, -1, pub);
         }
         logger.info("Adding songs to the playlist...");
-        for (Track t : similar) api.updatePlaylist(playlist.id(), t.id(), -1, pub);
-        logger.info("Added {} songs to playlist {}!", similar.size(), playlist.name());
+        for (Track t : similar) api.updatePlaylist(playlist.id, t.id(), -1, pub);
+        logger.info("Added {} songs to playlist {}!", similar.size(), playlist.name);
 
         if (printJSON) System.out.println(gson.toJson(playlist));
     }
@@ -361,15 +361,15 @@ public class App {
             } catch (SubsonicException e) {
                 if (e.getError().code() == 70) {
                     logger.info("Getting a list of playlists...");
-                    toRemove = api.getPlaylists().stream().filter(pls -> pls.name().equals(remove)).findAny()
+                    toRemove = api.getPlaylists().stream().filter(pls -> pls.name.equals(remove)).findAny()
                             .orElse(null);
                 } else {
                     throw e;
                 }
             }
             if (toRemove != null) {
-                logger.info("Deleting playlist \"{}\"", toRemove.name());
-                api.deletePlaylist(toRemove.id());
+                logger.info("Deleting playlist \"{}\"", toRemove.name);
+                api.deletePlaylist(toRemove.id);
                 logger.info("Playlist deleted!");
             } else {
                 logger.error("Playlist {} not found", remove);
