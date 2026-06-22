@@ -143,15 +143,15 @@ public class Repository {
                                 String.join(", ", valList.stream().map(e -> String.valueOf(e.getValue()))
                                         .toArray(String[]::new))))) {
             int i = 1;
-            st.setString(i++, song.id());
-            st.setString(i++, song.title());
+            st.setString(i++, song.id);
+            st.setString(i++, song.title);
             st.setString(i++, moodName);
             st.setString(i++, instrumentName);
             st.setString(i++, genreName);
             st.setInt(i++, (int) bpm);
             st.setBoolean(i++, failed != null);
             st.setString(i++, failed == null ? null : failed.getMessage());
-            st.setString(i++, song.artist());
+            st.setString(i++, song.artist);
             st.executeUpdate();
         }
     }

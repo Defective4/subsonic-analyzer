@@ -102,20 +102,20 @@ public class App {
             db.setAnalysisState(AnalysisState.ABORTED);
             for (int i = 0; i < songs.size(); i++) {
                 Entity song = songs.get(i);
-                if (ignore.contains(song.id())) {
-                    logger.info("%s is already in database, skipped.".formatted(song.title()));
+                if (ignore.contains(song.id)) {
+                    logger.info("%s is already in database, skipped.".formatted(song.title));
                     continue;
                 }
-                logger.info("Starting analysis of %s (%s) [%s/%s]...".formatted(song.title(), song.id(), i + 1,
-                        songs.size()));
-                logger.info("Downloading %s...".formatted(song.id()));
-                Path target = Path.of(tmpDir.toString(), Path.of(song.path()).getFileName().toString());
+                logger.info(
+                        "Starting analysis of %s (%s) [%s/%s]...".formatted(song.title, song.id, i + 1, songs.size()));
+                logger.info("Downloading %s...".formatted(song.id));
+                Path target = Path.of(tmpDir.toString(), Path.of(song.path).getFileName().toString());
                 target.toFile().deleteOnExit();
                 try {
                     try (InputStream in = api.download(song)) {
                         Files.copy(in, target);
                     }
-                    logger.info("Analyzing %s...".formatted(song.id()));
+                    logger.info("Analyzing %s...".formatted(song.id));
                     AnalysisResponse response = analyzer.requestAnalysis(target.toString());
                     List<String> missing = new ArrayList<>();
                     for (String model : ModelLoader.REQUIRED_MODELS)
@@ -126,7 +126,7 @@ public class App {
                     }
                     float bpm = response.bpm();
                     logger.info("Storing results in database...");
-                    logger.info("Results for %s:".formatted(song.title()));
+                    logger.info("Results for %s:".formatted(song.title));
                     String moodName = models.get("moods").classes()[response.mood()];
                     String instrumentName = models.get("instruments").classes()[response.instrument()];
                     String genreName = models.get("genres").classes()[response.genre()];

@@ -86,7 +86,7 @@ public class SubsonicAPI {
     }
 
     public InputStream download(Entity entity) throws IOException {
-        return URI.create(baseURL + "download" + constructQueryString(Map.of("id", entity.id()))).toURL().openStream();
+        return URI.create(baseURL + "download" + constructQueryString(Map.of("id", entity.id))).toURL().openStream();
     }
 
     public List<Entity> getAlbumList(int limit, int offset) throws IOException {
@@ -109,7 +109,7 @@ public class SubsonicAPI {
                 break;
         }
         return Collections.unmodifiableList(filterAlbumArtist == null ? albums
-                : albums.stream().filter(a -> a.artist().equalsIgnoreCase(filterAlbumArtist)).toList());
+                : albums.stream().filter(a -> a.artist.equalsIgnoreCase(filterAlbumArtist)).toList());
     }
 
     public List<Entity> getAllMusic(Logger logger, String filterArtist, String filterAlbumArtist) throws IOException {
@@ -118,10 +118,10 @@ public class SubsonicAPI {
         int i = 0;
         for (Entity album : albums) {
             if (++i % 100 == 0) logger.info("Downloaded metadata for %s out of %s albums".formatted(i, albums.size()));
-            songs.addAll(getMusicDirectory(album.id()));
+            songs.addAll(getMusicDirectory(album.id));
         }
         return Collections.unmodifiableList(filterArtist == null ? songs
-                : songs.stream().filter(s -> s.artist().equalsIgnoreCase(filterArtist)).toList());
+                : songs.stream().filter(s -> s.artist.equalsIgnoreCase(filterArtist)).toList());
     }
 
     public List<Entity> getMusicDirectory(String id) throws IOException {

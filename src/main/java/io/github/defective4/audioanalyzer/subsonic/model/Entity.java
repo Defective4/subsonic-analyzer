@@ -1,5 +1,8 @@
 package io.github.defective4.audioanalyzer.subsonic.model;
 
-public record Entity(String id, String title, String path, String artist) {
-
+public class Entity {
+    public String artist;
+    public String id;
+    public String path;
+    public String title;
 }

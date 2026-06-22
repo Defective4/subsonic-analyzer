@@ -96,7 +96,6 @@ public class AnalyzerProxy {
         try {
             String ctxPath = ctx.path();
             if (ctxPath.endsWith(".view")) ctxPath = ctxPath.substring(0, ctxPath.length() - ".view".length());
-            System.out.println(ctxPath);
             ResponseModifier replacer = replacers.get(ctxPath);
             con = (HttpURLConnection) URI
                     .create(targetBaseURL + ctx.path() + (ctx.queryString() == null ? "" : "?" + ctx.queryString()))
