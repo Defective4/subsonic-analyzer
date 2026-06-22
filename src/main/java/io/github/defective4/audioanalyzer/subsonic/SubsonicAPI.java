@@ -29,10 +29,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 import io.github.defective4.audioanalyzer.exception.SubsonicException;
-import io.github.defective4.audioanalyzer.subsonic.model.AlbumList;
 import io.github.defective4.audioanalyzer.subsonic.model.Entity;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
-import io.github.defective4.audioanalyzer.subsonic.model.SongList;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicError;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 
@@ -91,8 +89,10 @@ public class SubsonicAPI {
         return URI.create(baseURL + "download" + constructQueryString(Map.of("id", entity.id()))).toURL().openStream();
     }
 
-    public AlbumList getAlbumList(int limit, int offset) throws IOException {
-        return request("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset)).albumList();
+    public List<Entity> getAlbumList(int limit, int offset) throws IOException {
+        return List
+                .of(gson.fromJson(requestRaw("getAlbumList", Map.of("type", "newest", "size", limit, "offset", offset))
+                        .getAsJsonObject("albumList").get("album"), Entity[].class));
     }
 
     public List<Entity> getAllAlbums(Logger logger, String filterAlbumArtist) throws IOException {
@@ -100,10 +100,10 @@ public class SubsonicAPI {
         int offset = 0;
         int i = 0;
         while (true) {
-            Entity[] as = getAlbumList(500, offset).album();
+            List<Entity> as = getAlbumList(500, offset);
             logger.info("Downloaded chunk %s".formatted(++i));
-            Collections.addAll(albums, as);
-            if (as.length == 500)
+            albums.addAll(as);
+            if (as.size() == 500)
                 offset += 500;
             else
                 break;
@@ -118,14 +118,16 @@ public class SubsonicAPI {
         int i = 0;
         for (Entity album : albums) {
             if (++i % 100 == 0) logger.info("Downloaded metadata for %s out of %s albums".formatted(i, albums.size()));
-            Collections.addAll(songs, getMusicDirectory(album.id()).child());
+            songs.addAll(getMusicDirectory(album.id()));
         }
         return Collections.unmodifiableList(filterArtist == null ? songs
                 : songs.stream().filter(s -> s.artist().equalsIgnoreCase(filterArtist)).toList());
     }
 
-    public SongList getMusicDirectory(String id) throws IOException {
-        return request("getMusicDirectory", Map.of("id", id)).directory();
+    public List<Entity> getMusicDirectory(String id) throws IOException {
+        return List.of(gson.fromJson(
+                requestRaw("getMusicDirectory", Map.of("id", id)).getAsJsonObject("directory").get("child"),
+                Entity[].class));
     }
 
     public Playlist getPlaylist(String id) throws IOException {
@@ -133,7 +135,8 @@ public class SubsonicAPI {
     }
 
     public List<Playlist> getPlaylists() throws IOException {
-        return List.of(request("getPlaylists", Map.of()).playlists().playlist());
+        return List.of(gson.fromJson(requestRaw("getPlaylists", Map.of()).getAsJsonObject("playlists").get("playlist"),
+                Playlist[].class));
     }
 
     public JsonObject getRawSongData(String id) throws IOException {
