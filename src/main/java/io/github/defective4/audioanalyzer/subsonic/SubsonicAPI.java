@@ -1,5 +1,6 @@
 package io.github.defective4.audioanalyzer.subsonic;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,15 +10,14 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 
@@ -34,19 +34,12 @@ import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
 import io.github.defective4.audioanalyzer.subsonic.model.Song;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicError;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
+import io.github.defective4.audioanalyzer.util.MD5;
 
 public class SubsonicAPI {
     private static final String CLIENT_ID = "audio-analyzer";
-    private static final HexFormat hex = HexFormat.of();
-    private static final MessageDigest MD5;
     private static final String VERSION = "1.16.1";
-    static {
-        try {
-            MD5 = MessageDigest.getInstance("md5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+
     private final String baseURL;
     private final String clientId;
     private final Gson gson = new GsonBuilder().create();
@@ -133,6 +126,13 @@ public class SubsonicAPI {
                 : songs.stream().filter(s -> s.artist.equalsIgnoreCase(filterArtist)).toList());
     }
 
+    public BufferedImage getCoverArt(String id) throws IOException {
+        try (InputStream in = URI.create(baseURL + "getCoverArt" + constructQueryString(Map.of("id", id))).toURL()
+                .openStream()) {
+            return ImageIO.read(in);
+        }
+    }
+
     public List<Song> getMusicDirectory(String id) throws IOException {
         return List.of(gson.fromJson(
                 requestRaw("getMusicDirectory", Map.of("id", id)).getAsJsonObject("directory").get("child"),
@@ -170,7 +170,7 @@ public class SubsonicAPI {
     }
 
     private String computeToken(String salt) {
-        return hash(new String(password) + salt);
+        return MD5.hash(new String(password) + salt);
     }
 
     private String constructQueryString(Map<String, Object> queryParameters) {
@@ -220,10 +220,5 @@ public class SubsonicAPI {
 
     private static String generateSalt() {
         return Long.toHexString(System.currentTimeMillis());
-    }
-
-    private static String hash(String data) {
-        MD5.reset();
-        return hex.formatHex(MD5.digest(data.getBytes(StandardCharsets.UTF_8)));
     }
 }
