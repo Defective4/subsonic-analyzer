@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.app.proxy;
+package io.github.defective4.audioanalyzer.app.proxy.virtual;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -50,6 +50,10 @@ public class VirtualLibraryManager {
             generatedPlaylists.put(user, Map.of(recent.id, recent));
         }
         return Collections.unmodifiableMap(generatedPlaylists.get(user));
+    }
+
+    public VirtualCoverManager getCoverManager() {
+        return coverManager;
     }
 
     private Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood)

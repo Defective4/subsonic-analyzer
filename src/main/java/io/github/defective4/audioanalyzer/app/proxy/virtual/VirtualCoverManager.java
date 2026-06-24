@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.app.proxy;
+package io.github.defective4.audioanalyzer.app.proxy.virtual;
 
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
@@ -35,7 +36,9 @@ public class VirtualCoverManager {
         for (JsonObject obj : songs) {
             if (obj.has("coverArt")) {
                 String artId = obj.get("coverArt").getAsString();
-                imgs.add(ImageUtil.crop(api.getCoverArt(artId)));
+                BufferedImage img = api.getCoverArt(artId);
+                if (img == null) continue;
+                imgs.add(ImageUtil.crop(img));
                 if (++j > 3) break;
             }
         }
@@ -53,5 +56,11 @@ public class VirtualCoverManager {
         File target = new File(cacheDir, id + ".png");
         target.deleteOnExit();
         ImageIO.write(merged, "png", target);
+    }
+
+    public Optional<BufferedImage> getCachedImage(String id) throws IOException {
+        File target = new File(cacheDir, id + ".png");
+        if (target.isFile()) return Optional.ofNullable(ImageIO.read(target));
+        return Optional.empty();
     }
 }

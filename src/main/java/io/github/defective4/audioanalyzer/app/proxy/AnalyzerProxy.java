@@ -2,6 +2,7 @@ package io.github.defective4.audioanalyzer.app.proxy;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -19,8 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import javax.imageio.ImageIO;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -28,21 +32,24 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import io.github.defective4.audioanalyzer.app.App;
+import io.github.defective4.audioanalyzer.app.proxy.virtual.VirtualLibraryManager;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
 import io.javalin.Javalin;
+import io.javalin.http.ContentType;
 import io.javalin.http.Context;
 
 public class AnalyzerProxy {
     private final Gson gson = new Gson();
+    private final Map<String, Function<Context, Boolean>> interceptors;
     private final Javalin javalin;
     private final VirtualLibraryManager libraryManager;
     private final String localHost;
     private final int localPort;
-    private final Map<String, List<String>> proposedSongs = new HashMap<>();
 
+    private final Map<String, List<String>> proposedSongs = new HashMap<>();
     private final Map<String, ResponseModifier> replacers;
     private final Repository repo;
     private final String targetBaseURL;
@@ -60,6 +67,25 @@ public class AnalyzerProxy {
         });
         this.repo = repo;
         libraryManager = new VirtualLibraryManager(repo, targetBaseURL);
+        interceptors = Map.of("/rest/getCoverArt", (ctx) -> {
+            String id = ctx.queryParam("id");
+            if (id != null) {
+                try {
+                    Optional<BufferedImage> image = libraryManager.getCoverManager().getCachedImage(id);
+                    if (image.isPresent()) {
+                        ctx.status(200);
+                        ctx.contentType(ContentType.IMAGE_PNG);
+                        try (OutputStream os = ctx.outputStream()) {
+                            ImageIO.write(image.get(), "png", os);
+                            return true;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return false;
+        });
         replacers = Map.of("/rest/getPlaylist", (props, obj) -> {
             try {
                 String id = props.get("id");
@@ -140,35 +166,37 @@ public class AnalyzerProxy {
                     wr.write(body);
                 }
             }
-
-            ctx.status(con.getResponseCode());
-
-            copyHeaders(con.getHeaderFields(), ctx);
-            try (InputStream in = con.getResponseCode() >= 400 ? con.getErrorStream() : con.getInputStream()) {
-                if (replacer != null && con.getResponseCode() < 300) {
-                    Map<String, List<String>> unresolvedParameters = new HashMap<>();
-                    unresolvedParameters.putAll(ctx.queryParamMap());
-                    unresolvedParameters.putAll(ctx.formParamMap());
-                    Map<String, String> params = new HashMap<>();
-
-                    for (Entry<String, List<String>> entry : unresolvedParameters.entrySet()) {
-                        if (!entry.getValue().isEmpty()) params.put(entry.getKey(), entry.getValue().get(0));
-                    }
-
-                    boolean gzip = con.getHeaderFields().getOrDefault("Content-Encoding", List.of()).stream()
-                            .anyMatch(v -> v.contains("gzip"));
-                    try (Reader reader = new InputStreamReader(gzip ? new GZIPInputStream(in) : in);
-                            Writer writer = new OutputStreamWriter(
-                                    gzip ? new GZIPOutputStream(ctx.outputStream()) : ctx.outputStream())) {
-                        JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
-                        replacer.modify(params, obj.getAsJsonObject("subsonic-response"));
-                        writer.write(gson.toJson(obj));
-                    }
-                } else {
-                    copyStream(ctx, in);
-                }
+            boolean cont = true;
+            if (interceptors.containsKey(ctxPath)) {
+                cont = !interceptors.get(ctxPath).apply(ctx);
             }
+            ctx.status(con.getResponseCode());
+            copyHeaders(con.getHeaderFields(), ctx);
+            if (cont)
+                try (InputStream in = con.getResponseCode() >= 400 ? con.getErrorStream() : con.getInputStream()) {
+                    if (replacer != null && con.getResponseCode() < 300) {
+                        Map<String, List<String>> unresolvedParameters = new HashMap<>();
+                        unresolvedParameters.putAll(ctx.queryParamMap());
+                        unresolvedParameters.putAll(ctx.formParamMap());
+                        Map<String, String> params = new HashMap<>();
 
+                        for (Entry<String, List<String>> entry : unresolvedParameters.entrySet()) {
+                            if (!entry.getValue().isEmpty()) params.put(entry.getKey(), entry.getValue().get(0));
+                        }
+
+                        boolean gzip = con.getHeaderFields().getOrDefault("Content-Encoding", List.of()).stream()
+                                .anyMatch(v -> v.contains("gzip"));
+                        try (Reader reader = new InputStreamReader(gzip ? new GZIPInputStream(in) : in);
+                                Writer writer = new OutputStreamWriter(
+                                        gzip ? new GZIPOutputStream(ctx.outputStream()) : ctx.outputStream())) {
+                            JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+                            replacer.modify(params, obj.getAsJsonObject("subsonic-response"));
+                            writer.write(gson.toJson(obj));
+                        }
+                    } else {
+                        copyStream(ctx, in);
+                    }
+                }
         } finally {
             if (con != null) con.disconnect();
         }
