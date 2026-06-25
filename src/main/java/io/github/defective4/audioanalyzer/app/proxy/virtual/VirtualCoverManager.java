@@ -1,11 +1,13 @@
 package io.github.defective4.audioanalyzer.app.proxy.virtual;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,12 +23,16 @@ import io.github.defective4.audioanalyzer.util.ImageUtil;
 public class VirtualCoverManager {
 
     private final File cacheDir;
+    private final Font font;
 
     public VirtualCoverManager() {
-        try {
-            cacheDir = Files.createTempDirectory("an").toFile();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+        cacheDir = new File("cache");
+        cacheDir.mkdirs();
+
+        try (InputStream in = VirtualCoverManager.class.getResourceAsStream("/graphics/Font Awesome 7 Free-Solid-900.otf")) {
+            font = Font.createFont(Font.TRUETYPE_FONT, in).deriveFont(58f);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -53,6 +59,8 @@ public class VirtualCoverManager {
             g2.drawImage(imgs.get(i), x, y, 256, 256, null);
         }
 
+        g2.drawImage(getCoverOverlay(Color.cyan, ""), 0, 0, 512, 512, null);
+
         File target = new File(cacheDir, id + ".png");
         target.deleteOnExit();
         ImageIO.write(merged, "png", target);
@@ -62,5 +70,30 @@ public class VirtualCoverManager {
         File target = new File(cacheDir, id + ".png");
         if (target.isFile()) return Optional.ofNullable(ImageIO.read(target));
         return Optional.empty();
+    }
+
+    private BufferedImage getCoverOverlay(Color color, String text) throws IOException {
+        try (InputStream in = VirtualCoverManager.class.getResourceAsStream("/graphics/overlay.png")) {
+            BufferedImage img = ImageIO.read(in);
+            for (int x = 0; x < img.getWidth(); x++) {
+                for (int y = 0; y < img.getHeight(); y++) {
+                    Color c = new Color(img.getRGB(x, y));
+                    if (c.getAlpha() == 255 && c.getRed() == 255 && c.getGreen() == 255 && c.getBlue() == 255) {
+                        img.setRGB(x, y, color.getRGB());
+                    }
+                }
+            }
+            Graphics2D g2= img.createGraphics();
+            g2.setRenderingHints(Map.of(
+                    RenderingHints.KEY_RENDERING,
+                    RenderingHints.VALUE_RENDER_QUALITY,
+                    RenderingHints.KEY_TEXT_ANTIALIASING,
+                    RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+                    ));
+            g2.setFont(font);
+            g2.setColor(Color.black);
+            g2.drawString(text, 445, 62);
+            return img;
+        }
     }
 }

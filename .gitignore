@@ -12,3 +12,4 @@
 /debian/usr
 /data
 /*.jpage
+/cache
