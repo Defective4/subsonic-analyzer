@@ -29,14 +29,16 @@ public class VirtualCoverManager {
         cacheDir = new File("cache");
         cacheDir.mkdirs();
 
-        try (InputStream in = VirtualCoverManager.class.getResourceAsStream("/graphics/Font Awesome 7 Free-Solid-900.otf")) {
-            font = Font.createFont(Font.TRUETYPE_FONT, in).deriveFont(58f);
-        } catch(Exception e) {
+        try (InputStream in = VirtualCoverManager.class
+                .getResourceAsStream("/graphics/Font Awesome 7 Free-Solid-900.otf")) {
+            font = Font.createFont(Font.TRUETYPE_FONT, in).deriveFont(52f);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id) throws IOException {
+    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id, String icon)
+            throws IOException {
         List<BufferedImage> imgs = new ArrayList<>(4);
         int j = 0;
         for (JsonObject obj : songs) {
@@ -59,7 +61,7 @@ public class VirtualCoverManager {
             g2.drawImage(imgs.get(i), x, y, 256, 256, null);
         }
 
-        g2.drawImage(getCoverOverlay(Color.cyan, ""), 0, 0, 512, 512, null);
+        g2.drawImage(getCoverOverlay(Color.cyan, icon), 0, 0, 512, 512, null);
 
         File target = new File(cacheDir, id + ".png");
         target.deleteOnExit();
@@ -83,16 +85,15 @@ public class VirtualCoverManager {
                     }
                 }
             }
-            Graphics2D g2= img.createGraphics();
-            g2.setRenderingHints(Map.of(
-                    RenderingHints.KEY_RENDERING,
-                    RenderingHints.VALUE_RENDER_QUALITY,
-                    RenderingHints.KEY_TEXT_ANTIALIASING,
-                    RenderingHints.VALUE_TEXT_ANTIALIAS_ON
-                    ));
+            Graphics2D g2 = img.createGraphics();
+            g2.setRenderingHints(Map.of(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY,
+                    RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
             g2.setFont(font);
             g2.setColor(Color.black);
-            g2.drawString(text, 445, 62);
+
+            int w = g2.getFontMetrics().stringWidth(text);
+
+            g2.drawString(text, 512 - w - 16, 56);
             return img;
         }
     }

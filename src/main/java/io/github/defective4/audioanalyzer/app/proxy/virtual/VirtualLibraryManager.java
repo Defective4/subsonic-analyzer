@@ -25,6 +25,7 @@ import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
 import io.github.defective4.audioanalyzer.subsonic.model.Album;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
 import io.github.defective4.audioanalyzer.subsonic.model.Song;
+import io.github.defective4.audioanalyzer.util.FontAwesomeIcons;
 
 public class VirtualLibraryManager {
     private static final DateFormat FMT = new SimpleDateFormat("yyyy-MM-ddZ");
@@ -88,7 +89,7 @@ public class VirtualLibraryManager {
             if (e != null) cover = e.getAsString();
         }
         fromRecent.coverArt = fromRecent.id + "_c";
-        coverManager.generateAndSaveCover(api, similar, fromRecent.coverArt);
+        coverManager.generateAndSaveCover(api, similar, fromRecent.coverArt, FontAwesomeIcons.HISTORY);
 
         return fromRecent;
     }
