@@ -37,7 +37,7 @@ public class VirtualCoverManager {
         }
     }
 
-    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id, String icon, Color color)
+    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id, String icon, Color color, Color iconColor)
             throws IOException {
         List<BufferedImage> imgs = new ArrayList<>(4);
         int j = 0;
@@ -61,7 +61,7 @@ public class VirtualCoverManager {
             g2.drawImage(imgs.get(i), x, y, 256, 256, null);
         }
 
-        if (icon != null) g2.drawImage(getCoverOverlay(color, icon), 0, 0, 512, 512, null);
+        if (icon != null) g2.drawImage(getCoverOverlay(color, icon, iconColor), 0, 0, 512, 512, null);
 
         File target = new File(cacheDir, id + ".png");
         target.deleteOnExit();
@@ -74,7 +74,7 @@ public class VirtualCoverManager {
         return Optional.empty();
     }
 
-    private BufferedImage getCoverOverlay(Color color, String text) throws IOException {
+    private BufferedImage getCoverOverlay(Color color, String text, Color iconColor) throws IOException {
         try (InputStream in = VirtualCoverManager.class.getResourceAsStream("/graphics/overlay.png")) {
             BufferedImage img = ImageIO.read(in);
             for (int x = 0; x < img.getWidth(); x++) {
@@ -89,7 +89,7 @@ public class VirtualCoverManager {
             g2.setRenderingHints(Map.of(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY,
                     RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON));
             g2.setFont(font);
-            g2.setColor(Color.black);
+            g2.setColor(iconColor);
 
             int w = g2.getFontMetrics().stringWidth(text);
 

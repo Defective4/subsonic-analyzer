@@ -5,19 +5,24 @@ import java.util.List;
 
 import io.github.defective4.audioanalyzer.util.FontAwesomeIcons;
 
-public record ProxyVLibConfig(boolean enablePlaylistEngine, boolean generateFromRecents, int fromRecentsLimit,
-        String fromRecentsIcon, String fromRecentsColor, String fromRecentsName, List<ProxyPlaylistConfig> playlists) {
+public record ProxyVLibConfig(boolean enableVirtualLibrary, boolean generateFromRecents, int fromRecentsLimit,
+        String fromRecentsIcon, String fromRecentsCoverColor, String fromRecentsName, String fromRecentsIconColor,
+        List<ProxyPlaylistConfig> playlists) {
     public ProxyVLibConfig() {
-        this(true, true, 30, "history", "#00ffff", "From your recent sessions", List.of(
-                new ProxyPlaylistConfig("Mix to study to", "study", "book_open", "#00ff55", 30),
-                new ProxyPlaylistConfig("Happy mix", "happy", "heart", "#ff0000", 30)
-                ));
+        this(true, true, 30, "history", "#00ffff", "From your recent sessions", "#000000",
+                List.of(new ProxyPlaylistConfig("Mix to study to", "study", "book_open", "#00ff55", 30, "#000000"),
+                        new ProxyPlaylistConfig("Happy mix", "happy", "heart", "#ff0000", 30, "#000000")));
         getFromRecentsIcon();
-        getFromRecentsColor();
+        getFromRecentsCoverColor();
+        getFromRecentsIconColor();
     }
 
-    public Color getFromRecentsColor() {
-        return Color.decode(fromRecentsColor);
+    public Color getFromRecentsIconColor() {
+        return Color.decode(fromRecentsIconColor);
+    }
+
+    public Color getFromRecentsCoverColor() {
+        return Color.decode(fromRecentsCoverColor);
     }
 
     public String getFromRecentsIcon() {

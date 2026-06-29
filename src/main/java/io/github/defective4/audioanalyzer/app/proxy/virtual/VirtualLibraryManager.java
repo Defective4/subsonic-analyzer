@@ -49,14 +49,6 @@ public class VirtualLibraryManager {
         this.config = config;
     }
 
-    public Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood, String coverIcon, Color color,
-            String id, String name) throws SQLException, IOException {
-        List<Track> allTracks = new ArrayList<>(repo.getAllTracks(true));
-        Collections.shuffle(allTracks, rand);
-        List<Track> tracks = allTracks.stream().filter(mood::matches).limit(limit).toList();
-        return generatePlaylist(api, null, tracks, id, name, coverIcon, color);
-    }
-
     public Map<String, Playlist> generateOrGetPlaylists(SubsonicAPI api) throws IOException, SQLException {
         String user = api.getUsername();
         if (!generatedPlaylists.containsKey(user)) {
@@ -67,7 +59,7 @@ public class VirtualLibraryManager {
             }
             for (ProxyPlaylistConfig pls : config.playlists()) {
                 Playlist playlist = generateMoodPlaylist(api, pls.limit(), pls.getMood(), pls.getIcon(), pls.getColor(),
-                        "virt_" + pls.mood(), pls.name());
+                        "virt_" + pls.mood(), pls.name(), pls.getIconColor());
                 map.put(playlist.id, playlist);
             }
             generatedPlaylists.put(user, Collections.unmodifiableMap(map));
@@ -79,8 +71,16 @@ public class VirtualLibraryManager {
         return coverManager;
     }
 
+    private Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood, String coverIcon, Color color,
+            String id, String name, Color iconColor) throws SQLException, IOException {
+        List<Track> allTracks = new ArrayList<>(repo.getAllTracks(true));
+        Collections.shuffle(allTracks, rand);
+        List<Track> tracks = allTracks.stream().filter(mood::matches).limit(limit).toList();
+        return generatePlaylist(api, null, tracks, id, name, coverIcon, color, iconColor);
+    }
+
     private Playlist generatePlaylist(SubsonicAPI api, String cover, List<Track> tracks, String id, String name,
-            String coverIcon, Color color) throws IOException {
+            String coverIcon, Color color, Color iconColor) throws IOException {
         List<JsonObject> similar = new ArrayList<>();
         for (Track track : tracks) {
             similar.add(api.getRawSongData(track.id()));
@@ -104,7 +104,7 @@ public class VirtualLibraryManager {
         }
         if (!similar.isEmpty()) {
             fromRecent.coverArt = fromRecent.id + "_c";
-            coverManager.generateAndSaveCover(api, similar, fromRecent.coverArt, coverIcon, color);
+            coverManager.generateAndSaveCover(api, similar, fromRecent.coverArt, coverIcon, color, iconColor);
         }
 
         return fromRecent;
@@ -137,6 +137,6 @@ public class VirtualLibraryManager {
         }
 
         return generatePlaylist(api, albums.get(0).coverArt, similarTracks, "virt_recent", config.fromRecentsName(),
-                config.getFromRecentsIcon(), config.getFromRecentsColor());
+                config.getFromRecentsIcon(), config.getFromRecentsCoverColor(), config.getFromRecentsIconColor());
     }
 }

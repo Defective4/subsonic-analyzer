@@ -43,7 +43,7 @@ import io.javalin.http.ContentType;
 import io.javalin.http.Context;
 
 public class AnalyzerProxy {
-    private final ProxyConfiguration config = new ProxyConfiguration();
+    private final ProxyConfiguration config;
     private final Gson gson = new Gson();
     private final Map<String, Function<Context, Boolean>> interceptors;
     private final Javalin javalin;
@@ -56,8 +56,9 @@ public class AnalyzerProxy {
     private final Repository repo;
     private final String targetBaseURL;
 
-    public AnalyzerProxy(String targetBaseURL, int localPort, String localHost, Repository repo)
+    public AnalyzerProxy(String targetBaseURL, int localPort, String localHost, Repository repo, ProxyConfiguration config)
             throws MalformedURLException {
+        this.config = config;
         this.targetBaseURL = URI.create(targetBaseURL).toURL().toString();
         this.localPort = localPort;
         this.localHost = localHost;
@@ -69,27 +70,27 @@ public class AnalyzerProxy {
         });
         this.repo = repo;
         libraryManager = new VirtualLibraryManager(repo, targetBaseURL, config.virtLibrary());
-        interceptors = Map.of("/rest/getCoverArt", (ctx) -> {
-            String id = ctx.queryParam("id");
-            if (id != null) {
-                try {
-                    Optional<BufferedImage> image = libraryManager.getCoverManager().getCachedImage(id);
-                    if (image.isPresent()) {
-                        ctx.status(200);
-                        ctx.contentType(ContentType.IMAGE_PNG);
-                        try (OutputStream os = ctx.outputStream()) {
-                            ImageIO.write(image.get(), "png", os);
-                            return true;
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            return false;
-        });
         replacers = new HashMap<>();
-        if (config.virtLibrary().enablePlaylistEngine()) {
+        if (config.virtLibrary().enableVirtualLibrary()) {
+            interceptors = Map.of("/rest/getCoverArt", (ctx) -> {
+                String id = ctx.queryParam("id");
+                if (id != null) {
+                    try {
+                        Optional<BufferedImage> image = libraryManager.getCoverManager().getCachedImage(id);
+                        if (image.isPresent()) {
+                            ctx.status(200);
+                            ctx.contentType(ContentType.IMAGE_PNG);
+                            try (OutputStream os = ctx.outputStream()) {
+                                ImageIO.write(image.get(), "png", os);
+                                return true;
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return false;
+            });
             replacers.putAll(Map.of("/rest/getPlaylist", (props, obj) -> {
                 try {
                     String id = props.get("id");
@@ -119,7 +120,8 @@ public class AnalyzerProxy {
                     e.printStackTrace();
                 }
             }));
-        }
+        } else
+            interceptors = Map.of();
         replacers.put("/rest/getSimilarSongs", (props, obj) -> {
             try {
                 String id = props.get("id");
@@ -210,7 +212,7 @@ public class AnalyzerProxy {
 
     public static void main(String[] args) throws Exception {
         AnalyzerProxy proxy = new AnalyzerProxy("https://music.raspberry.local", 8080, "127.0.0.1",
-                new Repository("jdbc:sqlite:mood.sqlite"));
+                new Repository("jdbc:sqlite:mood.sqlite"), new ProxyConfiguration());
         proxy.start();
     }
 
