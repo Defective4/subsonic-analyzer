@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -19,6 +20,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.github.defective4.audioanalyzer.app.App;
+import io.github.defective4.audioanalyzer.config.ProxyPlaylistConfig;
 import io.github.defective4.audioanalyzer.config.ProxyVLibConfig;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
@@ -47,21 +49,26 @@ public class VirtualLibraryManager {
         this.config = config;
     }
 
-    public Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood, String coverIcon, Color color)
-            throws SQLException, IOException {
+    public Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood, String coverIcon, Color color,
+            String id, String name) throws SQLException, IOException {
         List<Track> allTracks = new ArrayList<>(repo.getAllTracks(true));
         Collections.shuffle(allTracks, rand);
         List<Track> tracks = allTracks.stream().filter(mood::matches).limit(limit).toList();
-        return generatePlaylist(api, null, tracks, "virt_study", "Music to study to", coverIcon, color);
+        return generatePlaylist(api, null, tracks, id, name, coverIcon, color);
     }
 
     public Map<String, Playlist> generateOrGetPlaylists(SubsonicAPI api) throws IOException, SQLException {
         String user = api.getUsername();
         if (!generatedPlaylists.containsKey(user)) {
-            HashMap<String, Playlist> map = new HashMap<>();
+            HashMap<String, Playlist> map = new LinkedHashMap<>();
             if (config.generateFromRecents()) {
                 Playlist recent = generatePlaylistFromRecents(api, config.fromRecentsLimit());
                 map.put(recent.id, recent);
+            }
+            for (ProxyPlaylistConfig pls : config.playlists()) {
+                Playlist playlist = generateMoodPlaylist(api, pls.limit(), pls.getMood(), pls.getIcon(), pls.getColor(),
+                        "virt_" + pls.mood(), pls.name());
+                map.put(playlist.id, playlist);
             }
             generatedPlaylists.put(user, Collections.unmodifiableMap(map));
         }
@@ -129,7 +136,7 @@ public class VirtualLibraryManager {
             });
         }
 
-        return generatePlaylist(api, albums.get(0).coverArt, similarTracks, "virt_recent", "From your recent sessions",
+        return generatePlaylist(api, albums.get(0).coverArt, similarTracks, "virt_recent", config.fromRecentsName(),
                 config.getFromRecentsIcon(), config.getFromRecentsColor());
     }
 }
