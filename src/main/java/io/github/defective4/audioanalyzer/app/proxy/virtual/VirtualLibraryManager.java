@@ -18,6 +18,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.github.defective4.audioanalyzer.app.App;
+import io.github.defective4.audioanalyzer.config.ProxyVLibConfig;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.ml.mood.CompositeMood;
@@ -30,25 +31,39 @@ import io.github.defective4.audioanalyzer.util.FontAwesomeIcons;
 public class VirtualLibraryManager {
     private static final DateFormat FMT = new SimpleDateFormat("yyyy-MM-ddZ");
 
+    private final ProxyVLibConfig config;
     private final VirtualCoverManager coverManager = new VirtualCoverManager();
+
     private final Map<String, Map<String, Playlist>> generatedPlaylists = new HashMap<>();
-
     private final Random rand = new Random();
-    private final Repository repo;
 
+    private final Repository repo;
     private final String targetBaseURL;
 
-    public VirtualLibraryManager(Repository repo, String targetBaseURL) throws MalformedURLException {
+    public VirtualLibraryManager(Repository repo, String targetBaseURL, ProxyVLibConfig config)
+            throws MalformedURLException {
         this.repo = repo;
         this.targetBaseURL = URI.create(targetBaseURL).toURL().toString();
+        this.config = config;
     }
 
-    public Map<String, Playlist> generateOrGetPlaylists(SubsonicAPI api, int limit) throws IOException, SQLException {
+    public Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood, String coverIcon)
+            throws SQLException, IOException {
+        List<Track> allTracks = new ArrayList<>(repo.getAllTracks(true));
+        Collections.shuffle(allTracks, rand);
+        List<Track> tracks = allTracks.stream().filter(mood::matches).limit(limit).toList();
+        return generatePlaylist(api, null, tracks, "virt_study", "Music to study to", coverIcon);
+    }
+
+    public Map<String, Playlist> generateOrGetPlaylists(SubsonicAPI api) throws IOException, SQLException {
         String user = api.getUsername();
         if (!generatedPlaylists.containsKey(user)) {
-            Playlist recent = generatePlaylistFromRecents(api, limit);
-
-            generatedPlaylists.put(user, Map.of(recent.id, recent));
+            HashMap<String, Playlist> map = new HashMap<>();
+            if (config.generateFromRecents()) {
+                Playlist recent = generatePlaylistFromRecents(api, config.generateFromRecentsLimit());
+                map.put(recent.id, recent);
+            }
+            generatedPlaylists.put(user, Collections.unmodifiableMap(map));
         }
         return Collections.unmodifiableMap(generatedPlaylists.get(user));
     }
@@ -57,16 +72,8 @@ public class VirtualLibraryManager {
         return coverManager;
     }
 
-    private Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood)
-            throws SQLException, IOException {
-        List<Track> allTracks = new ArrayList<>(repo.getAllTracks(true));
-        Collections.shuffle(allTracks, rand);
-        List<Track> tracks = allTracks.stream().filter(mood::matches).limit(limit).toList();
-        return generatePlaylist(api, null, tracks, "virt_study", "Music to study to");
-    }
-
-    private Playlist generatePlaylist(SubsonicAPI api, String cover, List<Track> tracks, String id, String name)
-            throws IOException {
+    private Playlist generatePlaylist(SubsonicAPI api, String cover, List<Track> tracks, String id, String name,
+            String coverIcon) throws IOException {
         List<JsonObject> similar = new ArrayList<>();
         for (Track track : tracks) {
             similar.add(api.getRawSongData(track.id()));
@@ -88,8 +95,10 @@ public class VirtualLibraryManager {
             JsonElement e = similar.get(0).get("coverArt");
             if (e != null) cover = e.getAsString();
         }
-        fromRecent.coverArt = fromRecent.id + "_c";
-        coverManager.generateAndSaveCover(api, similar, fromRecent.coverArt, FontAwesomeIcons.HISTORY);
+        if (!similar.isEmpty()) {
+            fromRecent.coverArt = fromRecent.id + "_c";
+            coverManager.generateAndSaveCover(api, similar, fromRecent.coverArt, coverIcon);
+        }
 
         return fromRecent;
     }
@@ -120,13 +129,7 @@ public class VirtualLibraryManager {
             });
         }
 
-        return generatePlaylist(api, albums.get(0).coverArt, similarTracks, "virt_recent", "From your recent sessions");
-    }
-
-    public static void main(String[] args) throws Exception {
-        VirtualLibraryManager libraryManager = new VirtualLibraryManager(new Repository("jdbc:sqlite:mood.sqlite"),
-                "https://music.raspberry.local");
-        SubsonicAPI api = new SubsonicAPI("test", "test".toCharArray(), "https://music.raspberry.local");
-        libraryManager.generateOrGetPlaylists(api, 30);
+        return generatePlaylist(api, albums.get(0).coverArt, similarTracks, "virt_recent", "From your recent sessions",
+                FontAwesomeIcons.HISTORY);
     }
 }

@@ -47,7 +47,7 @@ public class YamlMapper {
             }
         }
 
-        return (T) constructor.newInstance(params.toArray(Object[]::new));
+        return constructor.newInstance(params.toArray(Object[]::new));
     }
 
     private Object transformValue(Object value) throws NoSuchFieldException, IllegalAccessException {

@@ -61,7 +61,7 @@ public class VirtualCoverManager {
             g2.drawImage(imgs.get(i), x, y, 256, 256, null);
         }
 
-        g2.drawImage(getCoverOverlay(Color.cyan, icon), 0, 0, 512, 512, null);
+        if (icon != null) g2.drawImage(getCoverOverlay(Color.cyan, icon), 0, 0, 512, 512, null);
 
         File target = new File(cacheDir, id + ".png");
         target.deleteOnExit();

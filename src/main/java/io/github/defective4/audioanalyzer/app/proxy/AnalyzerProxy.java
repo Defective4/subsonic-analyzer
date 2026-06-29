@@ -33,6 +33,7 @@ import com.google.gson.JsonParser;
 
 import io.github.defective4.audioanalyzer.app.App;
 import io.github.defective4.audioanalyzer.app.proxy.virtual.VirtualLibraryManager;
+import io.github.defective4.audioanalyzer.config.ProxyConfiguration;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
@@ -42,13 +43,14 @@ import io.javalin.http.ContentType;
 import io.javalin.http.Context;
 
 public class AnalyzerProxy {
+    private final ProxyConfiguration config = new ProxyConfiguration();
     private final Gson gson = new Gson();
     private final Map<String, Function<Context, Boolean>> interceptors;
     private final Javalin javalin;
     private final VirtualLibraryManager libraryManager;
     private final String localHost;
-    private final int localPort;
 
+    private final int localPort;
     private final Map<String, List<String>> proposedSongs = new HashMap<>();
     private final Map<String, ResponseModifier> replacers;
     private final Repository repo;
@@ -66,7 +68,7 @@ public class AnalyzerProxy {
             });
         });
         this.repo = repo;
-        libraryManager = new VirtualLibraryManager(repo, targetBaseURL);
+        libraryManager = new VirtualLibraryManager(repo, targetBaseURL, config.virtLibrary());
         interceptors = Map.of("/rest/getCoverArt", (ctx) -> {
             String id = ctx.queryParam("id");
             if (id != null) {
@@ -86,35 +88,39 @@ public class AnalyzerProxy {
             }
             return false;
         });
-        replacers = Map.of("/rest/getPlaylist", (props, obj) -> {
-            try {
-                String id = props.get("id");
-                if (id == null) return;
-                SubsonicAPI api = new SubsonicAPI(targetBaseURL, props);
-                Playlist playlist = libraryManager.generateOrGetPlaylists(api, 30).get(id);
-                if (playlist != null) {
-                    obj.addProperty("status", "ok");
-                    obj.remove("error");
-                    obj.add("playlist", gson.toJsonTree(playlist));
+        replacers = new HashMap<>();
+        if (config.virtLibrary().enablePlaylistEngine()) {
+            replacers.putAll(Map.of("/rest/getPlaylist", (props, obj) -> {
+                try {
+                    String id = props.get("id");
+                    if (id == null) return;
+                    SubsonicAPI api = new SubsonicAPI(targetBaseURL, props);
+                    Playlist playlist = libraryManager.generateOrGetPlaylists(api).get(id);
+                    if (playlist != null) {
+                        obj.addProperty("status", "ok");
+                        obj.remove("error");
+                        obj.add("playlist", gson.toJsonTree(playlist));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, "/rest/getPlaylists", (props, obj) -> {
-            try {
-                SubsonicAPI api = new SubsonicAPI(targetBaseURL, props);
-                JsonArray pls = obj.getAsJsonObject("playlists").getAsJsonArray("playlist");
-                if (pls == null) {
-                    pls = new JsonArray();
-                    obj.getAsJsonObject("playlists").add("playlist", pls);
+            }, "/rest/getPlaylists", (props, obj) -> {
+                try {
+                    SubsonicAPI api = new SubsonicAPI(targetBaseURL, props);
+                    JsonArray pls = obj.getAsJsonObject("playlists").getAsJsonArray("playlist");
+                    if (pls == null) {
+                        pls = new JsonArray();
+                        obj.getAsJsonObject("playlists").add("playlist", pls);
+                    }
+                    for (Playlist p : libraryManager.generateOrGetPlaylists(api).values()) {
+                        pls.add(gson.toJsonTree(p));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                for (Playlist p : libraryManager.generateOrGetPlaylists(api, 30).values()) {
-                    pls.add(gson.toJsonTree(p));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, "/rest/getSimilarSongs", (props, obj) -> {
+            }));
+        }
+        replacers.put("/rest/getSimilarSongs", (props, obj) -> {
             try {
                 String id = props.get("id");
                 if (id == null) return;
