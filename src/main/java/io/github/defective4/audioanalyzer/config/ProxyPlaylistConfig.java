@@ -34,6 +34,6 @@ public record ProxyPlaylistConfig(String name, String mood, String icon, String 
     }
 
     public String getIcon() {
-        return FontAwesomeIcons.getIcon(icon).orElseThrow();
+        return icon == null ? null : FontAwesomeIcons.getIcon(icon).orElseThrow();
     }
 }

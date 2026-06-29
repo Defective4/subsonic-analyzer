@@ -10,7 +10,7 @@ public record ProxyVLibConfig(boolean enableVirtualLibrary, boolean generateFrom
         List<ProxyPlaylistConfig> playlists) {
     public ProxyVLibConfig() {
         this(true, true, 30, "history", "#00ffff", "From your recent sessions", "#000000",
-                List.of(new ProxyPlaylistConfig("Mix to study to", "study", "book_open", "#00ff55", 30, "#000000"),
+                List.of(new ProxyPlaylistConfig("Mix to study to", null, "book_open", "#00ff55", 30, "#000000"),
                         new ProxyPlaylistConfig("Happy mix", "happy", "heart", "#ff0000", 30, "#000000")));
         getFromRecentsIcon();
         getFromRecentsCoverColor();
@@ -26,6 +26,6 @@ public record ProxyVLibConfig(boolean enableVirtualLibrary, boolean generateFrom
     }
 
     public String getFromRecentsIcon() {
-        return FontAwesomeIcons.getIcon(fromRecentsIcon).orElseThrow();
+        return fromRecentsIcon==null ? null : FontAwesomeIcons.getIcon(fromRecentsIcon).orElseThrow();
     }
 }
