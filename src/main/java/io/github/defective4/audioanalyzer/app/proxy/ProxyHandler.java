@@ -8,6 +8,7 @@ import java.io.Writer;
 import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,22 +48,16 @@ public class ProxyHandler {
 
     public boolean deletePlaylist(Context ctx) {
         String id = getParam(ctx, "id");
-        if (id != null && id.startsWith("virt_")) {
-            ctx.status(200);
-            ctx.contentType(ContentType.APPLICATION_JSON);
-            JsonObject obj = new JsonObject();
-            obj.add("subsonic-response",
-                    gson.toJsonTree(new SubsonicResponse("failed",
-                            new SubsonicError(70, "Can't delete virtual playlists"), null, lastResponse.version(),
-                            lastResponse.type(), lastResponse.serverVersion(), lastResponse.openSubsonic())));
-            ctx.removeHeader("Content-Encoding");
-            try (Writer writer = new OutputStreamWriter(
-                    AnalyzerProxy.isGzip(ctx) ? new GZIPOutputStream(ctx.outputStream()) : ctx.outputStream())) {
-                writer.write(gson.toJson(obj));
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            if (isVirtualPlaylist(id, new SubsonicAPI(targetBaseURL, ctx))) {
+                SubsonicResponse resp = new SubsonicResponse("failed",
+                        new SubsonicError(70, "Can't delete virtual playlists"), null, lastResponse.version(),
+                        lastResponse.type(), lastResponse.serverVersion(), lastResponse.openSubsonic());
+                writeResponse(ctx, resp);
+                return true;
             }
-            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return false;
     }
@@ -147,10 +142,72 @@ public class ProxyHandler {
         this.lastResponse = Objects.requireNonNull(lastResponse);
     }
 
+    public boolean updatePlaylist(Context ctx) {
+        String id = getParam(ctx, "playlistId");
+        try {
+            SubsonicAPI api = new SubsonicAPI(targetBaseURL, ctx);
+            Playlist pls = libraryManager.generateOrGetPlaylists(api).get(id);
+            if (pls != null) {
+                String name = getParam(ctx, "name");
+                String comment = getParam(ctx, "comment");
+
+                if (name != null) pls.name = name;
+                if (comment != null) pls.comment = comment;
+
+                if (!getParams(ctx, "songIndexToRemove").isEmpty()) {
+                    writeResponse(ctx,
+                            new SubsonicResponse("failed",
+                                    new SubsonicError(70, "Can't remove songs from virtual playlists"), pls,
+                                    lastResponse.version(), lastResponse.type(), lastResponse.serverVersion(),
+                                    lastResponse.openSubsonic()));
+                    return true;
+                } else if (!getParams(ctx, "songIdToAdd").isEmpty()) {
+                    writeResponse(ctx, new SubsonicResponse("failed",
+                            new SubsonicError(70, "Can't add songs to virtual playlists"), pls, lastResponse.version(),
+                            lastResponse.type(), lastResponse.serverVersion(), lastResponse.openSubsonic()));
+                    return true;
+                }
+
+                writeResponse(ctx, new SubsonicResponse("ok", null, pls, lastResponse.version(), lastResponse.type(),
+                        lastResponse.serverVersion(), lastResponse.openSubsonic()));
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private boolean isVirtualPlaylist(String id, SubsonicAPI api) throws IOException, SQLException {
+        return id != null && libraryManager.generateOrGetPlaylists(api).containsKey(id);
+    }
+
+    private void writeResponse(Context ctx, SubsonicResponse resp) {
+        ctx.status(200);
+        ctx.contentType(ContentType.APPLICATION_JSON);
+        JsonObject obj = new JsonObject();
+        obj.add("subsonic-response", gson.toJsonTree(resp));
+        boolean gzip = AnalyzerProxy.isGzip(ctx);
+        if (gzip) ctx.header("Content-Encoding", "gzip");
+        try (Writer writer = new OutputStreamWriter(
+                gzip ? new GZIPOutputStream(ctx.outputStream()) : ctx.outputStream())) {
+            writer.write(gson.toJson(obj));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static String getParam(Context ctx, String key) {
         String val = ctx.queryParam(key);
         if (val == null) val = ctx.formParam(key);
         return val;
+    }
+
+    private static List<String> getParams(Context ctx, String key) {
+        List<String> val = new ArrayList<>();
+        val.addAll(ctx.queryParams(key));
+        val.addAll(ctx.formParams(key));
+        return Collections.unmodifiableList(val);
     }
 
 }

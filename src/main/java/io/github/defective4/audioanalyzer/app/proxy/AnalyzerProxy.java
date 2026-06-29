@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class AnalyzerProxy {
         replacers = new HashMap<>();
         if (config.virtLibrary().enableVirtualLibrary()) {
             interceptors = Map.of("/rest/getCoverArt", proxyHandler::getCoverArt, "/rest/deletePlaylist",
-                    proxyHandler::deletePlaylist);
+                    proxyHandler::deletePlaylist, "/rest/updatePlaylist", proxyHandler::updatePlaylist);
             replacers.putAll(Map.of("/rest/getPlaylist", proxyHandler::getPlaylist, "/rest/getPlaylists",
                     proxyHandler::getPlaylists));
         } else
@@ -103,14 +104,7 @@ public class AnalyzerProxy {
             if (cont)
                 try (InputStream in = con.getResponseCode() >= 400 ? con.getErrorStream() : con.getInputStream()) {
                     if (replacer != null && con.getResponseCode() < 300) {
-                        Map<String, List<String>> unresolvedParameters = new HashMap<>();
-                        unresolvedParameters.putAll(ctx.queryParamMap());
-                        unresolvedParameters.putAll(ctx.formParamMap());
-                        Map<String, String> params = new HashMap<>();
-
-                        for (Entry<String, List<String>> entry : unresolvedParameters.entrySet()) {
-                            if (!entry.getValue().isEmpty()) params.put(entry.getKey(), entry.getValue().get(0));
-                        }
+                        Map<String, String> params = getParams(ctx);
 
                         boolean gzip = isGzip(con);
                         try (Reader reader = new InputStreamReader(gzip ? new GZIPInputStream(in) : in);
@@ -133,6 +127,19 @@ public class AnalyzerProxy {
         } finally {
             if (con != null) con.disconnect();
         }
+    }
+
+    public static Map<String, String> getParams(Context ctx) {
+        Map<String, List<String>> unresolvedParameters = new HashMap<>();
+        unresolvedParameters.putAll(ctx.queryParamMap());
+        unresolvedParameters.putAll(ctx.formParamMap());
+        Map<String, String> params = new HashMap<>();
+
+        for (Entry<String, List<String>> entry : unresolvedParameters.entrySet()) {
+            if (!entry.getValue().isEmpty()) params.put(entry.getKey(), entry.getValue().get(0));
+        }
+
+        return Collections.unmodifiableMap(params);
     }
 
     public static boolean isGzip(Context ctx) {

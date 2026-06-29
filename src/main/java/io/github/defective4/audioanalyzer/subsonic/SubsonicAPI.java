@@ -28,6 +28,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
+import io.github.defective4.audioanalyzer.app.proxy.AnalyzerProxy;
 import io.github.defective4.audioanalyzer.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.subsonic.model.Album;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
@@ -35,6 +36,7 @@ import io.github.defective4.audioanalyzer.subsonic.model.Song;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicError;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 import io.github.defective4.audioanalyzer.util.MD5;
+import io.javalin.http.Context;
 
 public class SubsonicAPI {
     private static final String CLIENT_ID = "audio-analyzer";
@@ -69,6 +71,10 @@ public class SubsonicAPI {
 
         if ((password == null || password.length == 0) && (token == null || salt == null))
             throw new IllegalArgumentException("Missing password, token, or salt argument");
+    }
+
+    public SubsonicAPI(String baseURL, Context ctx) throws MalformedURLException {
+        this(baseURL, AnalyzerProxy.getParams(ctx));
     }
 
     public SubsonicAPI(String baseURL, Map<String, String> props) throws MalformedURLException {

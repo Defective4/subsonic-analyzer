@@ -90,10 +90,10 @@ public class VirtualLibraryManager {
         fromRecent.comment = config.defaultPlaylistDescription();
         fromRecent.duration = similar.stream()
                 .mapToInt(s -> s.has("duration") ? s.getAsJsonPrimitive("duration").getAsInt() : 0).sum();
+        fromRecent.songCount = similar.size();
         fromRecent.entry = similar.toArray(JsonObject[]::new);
         fromRecent.isPublic = true;
         fromRecent.owner = config.defaultPlaylistAuthor();
-        fromRecent.songCount = similar.size();
 
         String date = FMT.format(new Date(System.currentTimeMillis()));
         fromRecent.changed = date;
