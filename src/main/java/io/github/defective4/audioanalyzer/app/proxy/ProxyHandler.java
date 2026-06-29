@@ -3,13 +3,17 @@ package io.github.defective4.audioanalyzer.app.proxy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
 
@@ -23,12 +27,15 @@ import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
+import io.github.defective4.audioanalyzer.subsonic.model.SubsonicError;
+import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 import io.javalin.http.ContentType;
 import io.javalin.http.Context;
 
 public class ProxyHandler {
 
     private final Gson gson = new Gson();
+    private SubsonicResponse lastResponse = new SubsonicResponse(null, null, null, "none", "navidrome", "none", true);
     private final VirtualLibraryManager libraryManager;
     private final Map<String, List<String>> proposedSongs = new HashMap<>();
     private final String targetBaseURL;
@@ -38,8 +45,30 @@ public class ProxyHandler {
         this.targetBaseURL = targetBaseURL;
     }
 
+    public boolean deletePlaylist(Context ctx) {
+        String id = getParam(ctx, "id");
+        if (id != null && id.startsWith("virt_")) {
+            ctx.status(200);
+            ctx.contentType(ContentType.APPLICATION_JSON);
+            JsonObject obj = new JsonObject();
+            obj.add("subsonic-response",
+                    gson.toJsonTree(new SubsonicResponse("failed",
+                            new SubsonicError(70, "Can't delete virtual playlists"), null, lastResponse.version(),
+                            lastResponse.type(), lastResponse.serverVersion(), lastResponse.openSubsonic())));
+            ctx.removeHeader("Content-Encoding");
+            try (Writer writer = new OutputStreamWriter(
+                    AnalyzerProxy.isGzip(ctx) ? new GZIPOutputStream(ctx.outputStream()) : ctx.outputStream())) {
+                writer.write(gson.toJson(obj));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
+
     public boolean getCoverArt(Context ctx) {
-        String id = ctx.queryParam("id");
+        String id = getParam(ctx, "id");
         if (id != null) {
             try {
                 Optional<BufferedImage> image = libraryManager.getCoverManager().getCachedImage(id);
@@ -56,6 +85,10 @@ public class ProxyHandler {
             }
         }
         return false;
+    }
+
+    public SubsonicResponse getLastResponse() {
+        return lastResponse;
     }
 
     public void getPlaylist(Map<String, String> props, JsonObject obj)
@@ -108,6 +141,16 @@ public class ProxyHandler {
             }
             obj.getAsJsonObject("similarSongs").add("song", array);
         }
+    }
+
+    public void setLastResponse(SubsonicResponse lastResponse) {
+        this.lastResponse = Objects.requireNonNull(lastResponse);
+    }
+
+    private static String getParam(Context ctx, String key) {
+        String val = ctx.queryParam(key);
+        if (val == null) val = ctx.formParam(key);
+        return val;
     }
 
 }

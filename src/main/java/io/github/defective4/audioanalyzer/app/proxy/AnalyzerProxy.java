@@ -27,8 +27,10 @@ import com.google.gson.JsonParser;
 import io.github.defective4.audioanalyzer.app.proxy.virtual.VirtualLibraryManager;
 import io.github.defective4.audioanalyzer.config.ProxyConfiguration;
 import io.github.defective4.audioanalyzer.ml.Repository;
+import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.json.JavalinGson;
 
 public class AnalyzerProxy {
     private final ProxyConfiguration config;
@@ -50,6 +52,7 @@ public class AnalyzerProxy {
         this.localPort = localPort;
         this.localHost = localHost;
         javalin = Javalin.create(cfg -> {
+            cfg.jsonMapper(new JavalinGson());
             cfg.routes.apiBuilder(() -> {
                 get("*", ctx -> relayRequest(ctx));
                 post("*", ctx -> relayRequest(ctx));
@@ -60,7 +63,8 @@ public class AnalyzerProxy {
                 targetBaseURL);
         replacers = new HashMap<>();
         if (config.virtLibrary().enableVirtualLibrary()) {
-            interceptors = Map.of("/rest/getCoverArt", proxyHandler::getCoverArt);
+            interceptors = Map.of("/rest/getCoverArt", proxyHandler::getCoverArt, "/rest/deletePlaylist",
+                    proxyHandler::deletePlaylist);
             replacers.putAll(Map.of("/rest/getPlaylist", proxyHandler::getPlaylist, "/rest/getPlaylists",
                     proxyHandler::getPlaylists));
         } else
@@ -108,14 +112,15 @@ public class AnalyzerProxy {
                             if (!entry.getValue().isEmpty()) params.put(entry.getKey(), entry.getValue().get(0));
                         }
 
-                        boolean gzip = con.getHeaderFields().getOrDefault("Content-Encoding", List.of()).stream()
-                                .anyMatch(v -> v.contains("gzip"));
+                        boolean gzip = isGzip(con);
                         try (Reader reader = new InputStreamReader(gzip ? new GZIPInputStream(in) : in);
                                 Writer writer = new OutputStreamWriter(
                                         gzip ? new GZIPOutputStream(ctx.outputStream()) : ctx.outputStream())) {
                             JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
                             try {
-                                replacer.modify(params, obj.getAsJsonObject("subsonic-response"));
+                                JsonObject resp = obj.getAsJsonObject("subsonic-response");
+                                proxyHandler.setLastResponse(gson.fromJson(resp, SubsonicResponse.class));
+                                replacer.modify(params, resp);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -128,6 +133,11 @@ public class AnalyzerProxy {
         } finally {
             if (con != null) con.disconnect();
         }
+    }
+
+    public static boolean isGzip(Context ctx) {
+        String header = ctx.header("Accept-Encoding");
+        return header != null && header.contains("gzip");
     }
 
     public static void main(String[] args) throws Exception {
@@ -160,5 +170,10 @@ public class AnalyzerProxy {
                 out.write(buffer, 0, read);
             }
         }
+    }
+
+    private static boolean isGzip(HttpURLConnection con) {
+        return con.getHeaderFields().getOrDefault("Content-Encoding", List.of()).stream()
+                .anyMatch(v -> v.contains("gzip"));
     }
 }

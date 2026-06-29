@@ -1,4 +1,5 @@
 package io.github.defective4.audioanalyzer.subsonic.model;
 
-public record SubsonicResponse(String status, SubsonicError error, Playlist playlist, String version) {
+public record SubsonicResponse(String status, SubsonicError error, Playlist playlist, String version, String type,
+        String serverVersion, boolean openSubsonic) {
 }
