@@ -1,5 +1,7 @@
 package io.github.defective4.audioanalyzer.util;
 
+import java.util.Optional;
+
 public class FontAwesomeIcons {
     public static final String _11TY = "\ue7d6";
     public static final String _42_GROUP = "\ue080";
@@ -2552,4 +2554,12 @@ public class FontAwesomeIcons {
     public static final String ZULIP = "\ue853";
 
     private FontAwesomeIcons() {}
+
+    public static Optional<String> getIcon(String name) {
+        try {
+            return Optional.ofNullable((String) FontAwesomeIcons.class.getField(name.toUpperCase()).get(null));
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            return Optional.empty();
+        }
+    }
 }

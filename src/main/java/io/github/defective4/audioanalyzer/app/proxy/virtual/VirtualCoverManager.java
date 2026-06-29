@@ -37,7 +37,7 @@ public class VirtualCoverManager {
         }
     }
 
-    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id, String icon)
+    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id, String icon, Color color)
             throws IOException {
         List<BufferedImage> imgs = new ArrayList<>(4);
         int j = 0;
@@ -61,7 +61,7 @@ public class VirtualCoverManager {
             g2.drawImage(imgs.get(i), x, y, 256, 256, null);
         }
 
-        if (icon != null) g2.drawImage(getCoverOverlay(Color.cyan, icon), 0, 0, 512, 512, null);
+        if (icon != null) g2.drawImage(getCoverOverlay(color, icon), 0, 0, 512, 512, null);
 
         File target = new File(cacheDir, id + ".png");
         target.deleteOnExit();
