@@ -37,8 +37,8 @@ public class VirtualCoverManager {
         }
     }
 
-    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id, String icon, Color color, Color iconColor)
-            throws IOException {
+    public void generateAndSaveCover(SubsonicAPI api, List<JsonObject> songs, String id, String icon, Color color,
+            Color iconColor) throws IOException {
         List<BufferedImage> imgs = new ArrayList<>(4);
         int j = 0;
         for (JsonObject obj : songs) {
