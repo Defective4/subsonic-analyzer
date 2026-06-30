@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 
 import com.google.gson.Gson;
 
-import io.github.defective4.audioanalyzer.app.CLI;
+import io.github.defective4.audioanalyzer.app.cli.CLI;
 import io.github.defective4.audioanalyzer.ml.model.ModelMetadata;
 
 public class ModelLoader {

@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import io.github.defective4.audioanalyzer.app.cli.CLI;
 import io.github.defective4.audioanalyzer.app.option.EnvironmentVariable;
 import io.github.defective4.audioanalyzer.app.option.ProgramOptions;
 import io.github.defective4.audioanalyzer.exception.MissingModelsException;

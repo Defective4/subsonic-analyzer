@@ -5,7 +5,7 @@ import static io.github.defective4.audioanalyzer.expr.NumericExpressionType.*;
 import java.util.Map;
 import java.util.Set;
 
-import io.github.defective4.audioanalyzer.app.CLI;
+import io.github.defective4.audioanalyzer.app.cli.CLI;
 import io.github.defective4.audioanalyzer.expr.NumericExpression;
 
 public class MoodTypes {
