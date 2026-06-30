@@ -13,6 +13,7 @@ public class CronField {
     public CronField(String field, int max) {
         this(field, max, 0);
     }
+
     public CronField(String field, int max, int min) {
         this.min = min;
         this.max = max;
@@ -40,6 +41,13 @@ public class CronField {
         this.rangeMax = rangeMax;
         this.rangeMin = rangeMin;
         this.value = value;
+    }
+
+    public boolean matches(int value) {
+        if (this.value != null) return this.value == value;
+        if (list != null) return Arrays.stream(list).anyMatch(i -> i == value);
+        if (rangeMin != null && rangeMax != null) return value >= rangeMin && value <= rangeMax;
+        return true;
     }
 
     @Override
