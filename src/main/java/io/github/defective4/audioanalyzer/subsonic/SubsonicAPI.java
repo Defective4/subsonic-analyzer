@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -182,7 +183,7 @@ public class SubsonicAPI {
     }
 
     private String computeToken(String salt) {
-        return MD5.hash(new String(password) + salt);
+        return MD5.hash(new String(getPassword()) + salt);
     }
 
     private String constructQueryString(Map<String, Object> queryParameters) {
@@ -215,6 +216,18 @@ public class SubsonicAPI {
                 .append(String.format("%s=%s&", k, URLEncoder.encode(v.toString(), StandardCharsets.UTF_8))));
         String queryString = queryBuilder.toString();
         return queryString.substring(0, queryBuilder.length() - 1);
+    }
+
+    private char[] getPassword() {
+        if (new String(password).startsWith("enc:")) {
+            char[] decoded = new char[(password.length - 4) / 2];
+            byte[] dBytes = HexFormat.of().parseHex(password, 4, password.length);
+            for (int i = 0; i < dBytes.length; i++) {
+                decoded[i] = (char) dBytes[i];
+            }
+            return decoded;
+        }
+        return password;
     }
 
     private SubsonicResponse request(String path, Map<String, Object> queryParameters)

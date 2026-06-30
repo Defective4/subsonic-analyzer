@@ -26,23 +26,12 @@
                     <archive>
                         <manifest>
                             <mainClass>
-                                io.github.defective4.audioanalyzer.app.CLI</mainClass>
+                                io.github.defective4.audioanalyzer.app.cli.CLI</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>dependency</classpathPrefix>
                         </manifest>
                     </archive>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
