@@ -25,7 +25,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import io.github.defective4.audioanalyzer.app.proxy.cron.CronExpression;
+import io.github.defective4.audioanalyzer.app.proxy.cron.CronTask;
+import io.github.defective4.audioanalyzer.app.proxy.cron.Crontab;
 import io.github.defective4.audioanalyzer.app.proxy.virtual.VirtualLibraryManager;
+import io.github.defective4.audioanalyzer.config.CronTasksConfig;
 import io.github.defective4.audioanalyzer.config.ProxyConfiguration;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
@@ -35,12 +39,14 @@ import io.javalin.json.JavalinGson;
 
 public class AnalyzerProxy {
     private final ProxyConfiguration config;
+    private final Crontab crontab;
     private final Gson gson = new Gson();
     private final Map<String, Function<Context, Boolean>> interceptors;
     private final Javalin javalin;
+    private final VirtualLibraryManager libraryManager;
+
     private final String localHost;
     private final int localPort;
-
     private final ProxyHandler proxyHandler;
     private final Map<String, ResponseModifier> replacers;
     private final Repository repo;
@@ -60,8 +66,9 @@ public class AnalyzerProxy {
             });
         });
         this.repo = repo;
-        proxyHandler = new ProxyHandler(new VirtualLibraryManager(repo, targetBaseURL, config.virtLibrary()),
-                targetBaseURL);
+        libraryManager = new VirtualLibraryManager(repo, targetBaseURL, config.virtLibrary());
+
+        proxyHandler = new ProxyHandler(libraryManager, targetBaseURL);
         replacers = new HashMap<>();
         if (config.virtLibrary().enableVirtualLibrary()) {
             interceptors = Map.of("/rest/getCoverArt", proxyHandler::getCoverArt, "/rest/deletePlaylist",
@@ -71,6 +78,15 @@ public class AnalyzerProxy {
         } else
             interceptors = Map.of();
         replacers.put("/rest/getSimilarSongs", (props, obj) -> proxyHandler.getSimilarSongs(repo, props, obj));
+
+        if (config.cron().enabled()) {
+            crontab = new Crontab();
+            CronTasksConfig tasks = config.cron().tasks();
+            if (tasks.regenerateVirtualLibrary() != null) crontab.addTask(
+                    new CronTask(new CronExpression(tasks.regenerateVirtualLibrary()), () -> libraryManager.clear()));
+        } else {
+            crontab = null;
+        }
     }
 
     public void start() {

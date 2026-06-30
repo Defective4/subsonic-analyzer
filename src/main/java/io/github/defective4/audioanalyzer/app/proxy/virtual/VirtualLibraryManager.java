@@ -49,6 +49,10 @@ public class VirtualLibraryManager {
         this.config = config;
     }
 
+    public void clear() {
+        generatedPlaylists.clear();
+    }
+
     public Map<String, Playlist> generateOrGetPlaylists(SubsonicAPI api) throws IOException, SQLException {
         String user = api.getUsername();
         if (!generatedPlaylists.containsKey(user)) {
