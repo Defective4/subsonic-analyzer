@@ -89,6 +89,9 @@ public class ProxyHandler {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                } else {
+                    writeResponse(ctx, new SubsonicError(70, "Invalid mood name \"%s\"".formatted(moodName)));
+                    return true;
                 }
             }
         }

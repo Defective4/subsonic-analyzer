@@ -31,13 +31,18 @@ public class ProxyConsumer implements CLIConsumer {
             try (Writer writer = new FileWriter(cfgFile)) {
                 writer.write(new Yaml().dumpAsMap(YamlMapper.dump(def)));
             }
+            System.err.println("Saved default configuration file to %s.".formatted(cfgFile));
+            System.err.println("Edit it, and then start the proxy service again.");
+            System.exit(1);
+            return true;
         }
 
         ProxyConfiguration config;
-        try (Reader reader = new FileReader(cfgFile)){
+        try (Reader reader = new FileReader(cfgFile)) {
             config = YamlMapper.load(new Yaml().load(reader), ProxyConfiguration.class);
         }
 
+        prog.startProxy(target, port, host, config);
         return true;
     }
 

@@ -78,7 +78,7 @@ public class App {
             throws SQLException, IOException {
         this.analyzerURL = analyzerURL;
         File dbf = new File(dbFile);
-        if (!dbf.getParentFile().isDirectory()) dbf.getParentFile().mkdirs();
+        if (dbf.getParentFile() != null && !dbf.getParentFile().isDirectory()) dbf.getParentFile().mkdirs();
         db = new Repository("jdbc:sqlite:" + dbFile);
         api = username != null ? new SubsonicAPI(username, password, url) : null;
     }
@@ -451,7 +451,8 @@ public class App {
         logger.info("Done!");
     }
 
-    public void startProxy(String url, int localPort, String localHost, ProxyConfiguration config) throws MalformedURLException {
+    public void startProxy(String url, int localPort, String localHost, ProxyConfiguration config)
+            throws MalformedURLException {
         AnalyzerProxy proxy = new AnalyzerProxy(url, localPort, localHost, db, config);
         proxy.start();
     }
