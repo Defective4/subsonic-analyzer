@@ -41,7 +41,7 @@ public class AnalyzerProxy {
     private final ProxyConfiguration config;
     private final Crontab crontab;
     private final Gson gson = new Gson();
-    private final Map<String, Function<Context, Boolean>> interceptors;
+    private final Map<String, Function<Context, Boolean>> interceptors = new HashMap<>();
     private final Javalin javalin;
     private final VirtualLibraryManager libraryManager;
 
@@ -70,15 +70,19 @@ public class AnalyzerProxy {
 
         proxyHandler = new ProxyHandler(libraryManager, targetBaseURL);
         replacers = new HashMap<>();
+        if (config.enableManualDynamicPlaylists()) {
+            interceptors.put("/rest/createPlaylist", proxyHandler::createPlaylist);
+        }
+
         if (config.virtLibrary().enableVirtualLibrary()) {
-            interceptors = Map.of("/rest/createPlaylist", proxyHandler::createPlaylist, "/rest/getCoverArt",
-                    proxyHandler::getCoverArt, "/rest/deletePlaylist", proxyHandler::deletePlaylist,
-                    "/rest/updatePlaylist", proxyHandler::updatePlaylist);
+            interceptors.putAll(Map.of("/rest/getCoverArt", proxyHandler::getCoverArt, "/rest/deletePlaylist",
+                    proxyHandler::deletePlaylist, "/rest/updatePlaylist", proxyHandler::updatePlaylist));
             replacers.putAll(Map.of("/rest/getPlaylist", proxyHandler::getPlaylist, "/rest/getPlaylists",
                     proxyHandler::getPlaylists));
-        } else
-            interceptors = Map.of();
-        replacers.put("/rest/getSimilarSongs", (props, obj) -> proxyHandler.getSimilarSongs(repo, props, obj));
+        }
+
+        if (config.enableAutoDJ())
+            replacers.put("/rest/getSimilarSongs", (props, obj) -> proxyHandler.getSimilarSongs(repo, props, obj));
 
         if (config.cron().enabled()) {
             crontab = new Crontab();
