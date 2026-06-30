@@ -83,7 +83,11 @@ public class SubsonicAPI {
     }
 
     public Playlist createPlaylist(String name) throws IOException {
-        return request("createPlaylist", Map.of("name", name)).playlist();
+        return gson.fromJson(createPlaylistRaw(name), Playlist.class);
+    }
+
+    public JsonObject createPlaylistRaw(String name) throws IOException {
+        return requestRaw("createPlaylist", Map.of("name", name)).getAsJsonObject("playlist");
     }
 
     public void deletePlaylist(String id) throws IOException {
@@ -146,7 +150,7 @@ public class SubsonicAPI {
     }
 
     public Playlist getPlaylist(String id) throws IOException {
-        return request("getPlaylist", Map.of("id", id)).playlist();
+        return gson.fromJson(requestRaw("getPlaylist", Map.of("id", id)).getAsJsonObject("playlist"), Playlist.class);
     }
 
     public List<Playlist> getPlaylists() throws IOException {

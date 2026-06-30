@@ -8,24 +8,31 @@ import java.io.Writer;
 import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.github.defective4.audioanalyzer.app.App;
 import io.github.defective4.audioanalyzer.app.proxy.virtual.VirtualLibraryManager;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
+import io.github.defective4.audioanalyzer.ml.mood.CompositeMood;
+import io.github.defective4.audioanalyzer.ml.mood.MoodTypes;
 import io.github.defective4.audioanalyzer.subsonic.SubsonicAPI;
 import io.github.defective4.audioanalyzer.subsonic.model.Playlist;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicError;
@@ -35,10 +42,12 @@ import io.javalin.http.Context;
 
 public class ProxyHandler {
 
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Gson gson = new Gson();
-    private SubsonicResponse lastResponse = new SubsonicResponse(null, null, null, "none", "navidrome", "none", true);
+    private SubsonicResponse lastResponse = new SubsonicResponse(null, null, "none", "navidrome", "none", true);
     private final VirtualLibraryManager libraryManager;
     private final Map<String, List<String>> proposedSongs = new HashMap<>();
+
     private final String targetBaseURL;
 
     public ProxyHandler(VirtualLibraryManager libraryManager, String targetBaseURL) {
@@ -46,14 +55,51 @@ public class ProxyHandler {
         this.targetBaseURL = targetBaseURL;
     }
 
+    public boolean createPlaylist(Context ctx) {
+        String name = getParam(ctx, "name");
+        if (name != null) {
+            int sx = name.indexOf('[');
+            int ex = name.indexOf(']');
+
+            if (sx > -1 && ex > sx) {
+                String newName = name.substring(ex + 1).trim();
+                String moodName = name.substring(sx + 1, ex);
+
+                CompositeMood mood = MoodTypes.getMood(moodName.toLowerCase());
+                if (mood != null) {
+                    try {
+                        SubsonicAPI api = new SubsonicAPI(targetBaseURL, ctx);
+                        JsonObject plsObj = new JsonObject();
+                        JsonObject pls = api.createPlaylistRaw(newName);
+                        plsObj.add("playlist", pls);
+                        writeResponse(ctx, null, plsObj);
+                        String id = pls.get("id").getAsString();
+                        executorService.submit(() -> {
+                            try {
+                                for (String entry : Arrays.stream(libraryManager.generateMoodPlaylist(api, 30, mood,
+                                        null, null, "none", "none", null).entry).map(obj -> obj.get("id").getAsString())
+                                        .toList()) {
+                                    api.updatePlaylist(id, entry, -1, false);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+                        return true;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public boolean deletePlaylist(Context ctx) {
         String id = getParam(ctx, "id");
         try {
             if (isVirtualPlaylist(id, new SubsonicAPI(targetBaseURL, ctx))) {
-                SubsonicResponse resp = new SubsonicResponse("failed",
-                        new SubsonicError(70, "Can't delete virtual playlists"), null, lastResponse.version(),
-                        lastResponse.type(), lastResponse.serverVersion(), lastResponse.openSubsonic());
-                writeResponse(ctx, resp);
+                writeResponse(ctx, new SubsonicError(70, "Can't delete virtual playlists"));
                 return true;
             }
         } catch (Exception e) {
@@ -154,22 +200,14 @@ public class ProxyHandler {
                 if (name != null) pls.name = name;
                 if (comment != null) pls.comment = comment;
 
-                if (!getParams(ctx, "songIndexToRemove").isEmpty()) {
-                    writeResponse(ctx,
-                            new SubsonicResponse("failed",
-                                    new SubsonicError(70, "Can't remove songs from virtual playlists"), pls,
-                                    lastResponse.version(), lastResponse.type(), lastResponse.serverVersion(),
-                                    lastResponse.openSubsonic()));
-                    return true;
-                } else if (!getParams(ctx, "songIdToAdd").isEmpty()) {
-                    writeResponse(ctx, new SubsonicResponse("failed",
-                            new SubsonicError(70, "Can't add songs to virtual playlists"), pls, lastResponse.version(),
-                            lastResponse.type(), lastResponse.serverVersion(), lastResponse.openSubsonic()));
+                JsonObject plsObj = new JsonObject();
+                plsObj.add("playlist", gson.toJsonTree(pls));
+
+                if (!getParams(ctx, "songIndexToRemove").isEmpty() || !getParams(ctx, "songIdToAdd").isEmpty()) {
+                    writeResponse(ctx, new SubsonicError(70, "Can't modify virtual playlists"));
                     return true;
                 }
-
-                writeResponse(ctx, new SubsonicResponse("ok", null, pls, lastResponse.version(), lastResponse.type(),
-                        lastResponse.serverVersion(), lastResponse.openSubsonic()));
+                writeResponse(ctx, null, plsObj);
                 return true;
             }
         } catch (Exception e) {
@@ -182,11 +220,20 @@ public class ProxyHandler {
         return id != null && libraryManager.generateOrGetPlaylists(api).containsKey(id);
     }
 
-    private void writeResponse(Context ctx, SubsonicResponse resp) {
+    private void writeResponse(Context ctx, SubsonicError error) {
+        writeResponse(ctx, error, null);
+    }
+
+    private void writeResponse(Context ctx, SubsonicError error, JsonObject extra) {
         ctx.status(200);
         ctx.contentType(ContentType.APPLICATION_JSON);
         JsonObject obj = new JsonObject();
-        obj.add("subsonic-response", gson.toJsonTree(resp));
+        SubsonicResponse resp = new SubsonicResponse(error == null ? "ok" : "failed", error, lastResponse.version(),
+                lastResponse.type(), lastResponse.serverVersion(), lastResponse.openSubsonic());
+        JsonObject respObj = gson.toJsonTree(resp).getAsJsonObject();
+        if (extra != null) for (Entry<String, JsonElement> entry : extra.asMap().entrySet())
+            respObj.add(entry.getKey(), entry.getValue());
+        obj.add("subsonic-response", respObj);
         boolean gzip = AnalyzerProxy.isGzip(ctx);
         if (gzip) ctx.header("Content-Encoding", "gzip");
         try (Writer writer = new OutputStreamWriter(

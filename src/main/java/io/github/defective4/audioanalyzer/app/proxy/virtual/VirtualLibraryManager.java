@@ -53,6 +53,14 @@ public class VirtualLibraryManager {
         generatedPlaylists.clear();
     }
 
+    public Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood, String coverIcon, Color color,
+            String id, String name, Color iconColor) throws SQLException, IOException {
+        List<Track> allTracks = new ArrayList<>(repo.getAllTracks(true));
+        Collections.shuffle(allTracks, rand);
+        List<Track> tracks = allTracks.stream().filter(mood::matches).limit(limit).toList();
+        return generatePlaylist(api, null, tracks, id, name, coverIcon, color, iconColor);
+    }
+
     public Map<String, Playlist> generateOrGetPlaylists(SubsonicAPI api) throws IOException, SQLException {
         String user = api.getUsername();
         if (!generatedPlaylists.containsKey(user)) {
@@ -73,14 +81,6 @@ public class VirtualLibraryManager {
 
     public VirtualCoverManager getCoverManager() {
         return coverManager;
-    }
-
-    private Playlist generateMoodPlaylist(SubsonicAPI api, int limit, CompositeMood mood, String coverIcon, Color color,
-            String id, String name, Color iconColor) throws SQLException, IOException {
-        List<Track> allTracks = new ArrayList<>(repo.getAllTracks(true));
-        Collections.shuffle(allTracks, rand);
-        List<Track> tracks = allTracks.stream().filter(mood::matches).limit(limit).toList();
-        return generatePlaylist(api, null, tracks, id, name, coverIcon, color, iconColor);
     }
 
     private Playlist generatePlaylist(SubsonicAPI api, String cover, List<Track> tracks, String id, String name,

@@ -71,8 +71,9 @@ public class AnalyzerProxy {
         proxyHandler = new ProxyHandler(libraryManager, targetBaseURL);
         replacers = new HashMap<>();
         if (config.virtLibrary().enableVirtualLibrary()) {
-            interceptors = Map.of("/rest/getCoverArt", proxyHandler::getCoverArt, "/rest/deletePlaylist",
-                    proxyHandler::deletePlaylist, "/rest/updatePlaylist", proxyHandler::updatePlaylist);
+            interceptors = Map.of("/rest/createPlaylist", proxyHandler::createPlaylist, "/rest/getCoverArt",
+                    proxyHandler::getCoverArt, "/rest/deletePlaylist", proxyHandler::deletePlaylist,
+                    "/rest/updatePlaylist", proxyHandler::updatePlaylist);
             replacers.putAll(Map.of("/rest/getPlaylist", proxyHandler::getPlaylist, "/rest/getPlaylists",
                     proxyHandler::getPlaylists));
         } else
@@ -98,26 +99,26 @@ public class AnalyzerProxy {
         try {
             String ctxPath = ctx.path();
             if (ctxPath.endsWith(".view")) ctxPath = ctxPath.substring(0, ctxPath.length() - ".view".length());
-            ResponseModifier replacer = replacers.get(ctxPath);
-            con = (HttpURLConnection) URI
-                    .create(targetBaseURL + ctx.path() + (ctx.queryString() == null ? "" : "?" + ctx.queryString()))
-                    .toURL().openConnection();
-            con.setRequestMethod(ctx.method().name());
-            copyHeaders(ctx.headerMap(), con);
-            String body = ctx.body();
-            if (body != null && !body.isEmpty()) {
-                con.setDoOutput(true);
-                try (Writer wr = new OutputStreamWriter(con.getOutputStream())) {
-                    wr.write(body);
-                }
-            }
             boolean cont = true;
             if (interceptors.containsKey(ctxPath)) {
                 cont = !interceptors.get(ctxPath).apply(ctx);
             }
-            ctx.status(con.getResponseCode());
-            copyHeaders(con.getHeaderFields(), ctx);
-            if (cont)
+            if (cont) {
+                ResponseModifier replacer = replacers.get(ctxPath);
+                con = (HttpURLConnection) URI
+                        .create(targetBaseURL + ctx.path() + (ctx.queryString() == null ? "" : "?" + ctx.queryString()))
+                        .toURL().openConnection();
+                con.setRequestMethod(ctx.method().name());
+                copyHeaders(ctx.headerMap(), con);
+                String body = ctx.body();
+                if (body != null && !body.isEmpty()) {
+                    con.setDoOutput(true);
+                    try (Writer wr = new OutputStreamWriter(con.getOutputStream())) {
+                        wr.write(body);
+                    }
+                }
+                ctx.status(con.getResponseCode());
+                copyHeaders(con.getHeaderFields(), ctx);
                 try (InputStream in = con.getResponseCode() >= 400 ? con.getErrorStream() : con.getInputStream()) {
                     if (replacer != null && con.getResponseCode() < 300) {
                         Map<String, String> params = getParams(ctx);
@@ -140,6 +141,7 @@ public class AnalyzerProxy {
                         copyStream(ctx, in);
                     }
                 }
+            }
         } finally {
             if (con != null) con.disconnect();
         }
