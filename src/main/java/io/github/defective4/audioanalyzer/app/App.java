@@ -37,6 +37,8 @@ import com.google.gson.GsonBuilder;
 import io.github.defective4.audioanalyzer.app.cli.CLI;
 import io.github.defective4.audioanalyzer.app.option.EnvironmentVariable;
 import io.github.defective4.audioanalyzer.app.option.ProgramOptions;
+import io.github.defective4.audioanalyzer.app.proxy.AnalyzerProxy;
+import io.github.defective4.audioanalyzer.config.ProxyConfiguration;
 import io.github.defective4.audioanalyzer.exception.MissingModelsException;
 import io.github.defective4.audioanalyzer.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.expr.NumericExpression;
@@ -447,6 +449,11 @@ public class App {
         System.out.println();
         logger.info("Database analysis state: " + db.getAnalysisState());
         logger.info("Done!");
+    }
+
+    public void startProxy(String url, int localPort, String localHost, ProxyConfiguration config) throws MalformedURLException {
+        AnalyzerProxy proxy = new AnalyzerProxy(url, localPort, localHost, db, config);
+        proxy.start();
     }
 
     private void checkAPI() throws IOException {

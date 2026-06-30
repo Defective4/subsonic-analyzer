@@ -1,5 +1,6 @@
 package io.github.defective4.audioanalyzer.config.yaml;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -12,7 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 public class YamlMapper {
-    public Map<String, Object> dump(Record record)
+
+    private YamlMapper() {}
+
+    public static Map<String, Object> dump(Record record)
             throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
         if (record == null) return null;
         Map<String, Object> map = new LinkedHashMap<>();
@@ -25,7 +29,7 @@ public class YamlMapper {
         return Collections.unmodifiableMap(map);
     }
 
-    public <T> T load(Map<String, Object> map, Class<T> rClass)
+    public static <T> T load(Map<String, Object> map, Class<T> rClass)
             throws NoSuchFieldException, SecurityException, NoSuchMethodException, InstantiationException,
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (rClass == null || !rClass.isRecord()) return null;
@@ -37,6 +41,29 @@ public class YamlMapper {
             Object value = map.get(param.getName());
             if (value == null) {
                 params.add(null);
+            } else if(type.isArray() && List.class.isAssignableFrom(value.getClass())) {
+                List<?> list = (List<?>)value;
+                if(Record[].class.isAssignableFrom(type)) {
+                    Record[] array = list.stream()
+                            .filter(m -> m instanceof Map)
+                            .map(m -> {
+                                try {
+                                    return load((Map<String, Object>)m, type.getComponentType());
+                                } catch (NoSuchFieldException | SecurityException | NoSuchMethodException
+                                        | InstantiationException | IllegalAccessException | IllegalArgumentException
+                                        | InvocationTargetException e) {
+                                    throw new IllegalStateException(e);
+                                }
+                            })
+                            .toArray(v -> (Record[])Array.newInstance(type.getComponentType(), v));
+                    params.add(array);
+                } else {
+                    Object[] array = list.stream()
+                            .filter(m -> type.componentType().isAssignableFrom(m.getClass()))
+                            .map(m -> type.componentType().cast(m))
+                            .toArray(v -> (Object[])Array.newInstance(type.getComponentType(), v));
+                    params.add(array);
+                }
             } else if (Record.class.isAssignableFrom(type) && Map.class.isAssignableFrom(value.getClass())) {
                 Map<String, Object> submap = (Map<String, Object>) value;
                 params.add(load(submap, type));
@@ -48,14 +75,15 @@ public class YamlMapper {
         }
 
         return constructor.newInstance(params.toArray(Object[]::new));
+
     }
 
-    private Object transformValue(Object value) throws NoSuchFieldException, IllegalAccessException {
+    private static Object transformValue(Object value) throws NoSuchFieldException, IllegalAccessException {
         if (value == null) return null;
         Class<?> class1 = value.getClass();
-        if (List.class.isAssignableFrom(class1)) {
+        if (class1.isArray()) {
             List<Object> transformed = new ArrayList<>();
-            for (Object obj : (List<?>) value) transformed.add(transformValue(obj));
+            for (Object obj : (Object[]) value) transformed.add(transformValue(obj));
             return Collections.unmodifiableList(transformed);
         } else if (class1.isRecord()) {
             return dump((Record) value);

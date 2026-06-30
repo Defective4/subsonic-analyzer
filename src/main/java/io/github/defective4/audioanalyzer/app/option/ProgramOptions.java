@@ -38,6 +38,7 @@ public class ProgramOptions {
     public static final String DEFAULT_ESSENTIA = "http://127.0.0.1:8000/";
     public static final int DEFAULT_LIMIT = 30;
     public static final URL DEFAULT_MODELS_BASE_URL;
+    public static final String DEFAULT_PROXY_CONFIG = "config.yml";
     @EnvironmentVariable("PLAYLIST_DELETE")
     public static final Option DELETE_PLAYLIST_OPTION;
     public static final Options ENV_OPTIONS;
@@ -90,6 +91,13 @@ public class ProgramOptions {
     @EnvironmentVariable(value = "SUBSONIC_PASSWORD", sensitive = true)
     public static final Option PASSWORD_OPTION;
     public static final Options PLAYLIST_OPTIONS;
+    @EnvironmentVariable("PROXY_CONFIG")
+    public static final Option PROXY_CONFIG;
+    @EnvironmentVariable("PROXY_HOST")
+    public static final Option PROXY_HOST;
+    public static final Options PROXY_OPTIONS;
+    @EnvironmentVariable("PROXY_PORT")
+    public static final Option PROXY_PORT;
     @EnvironmentVariable("STATS_OUTPUT_FILE")
     public static final Option ST_OUTPUT_OPTION;
     @EnvironmentVariable("STATS_FORMAT")
@@ -99,6 +107,7 @@ public class ProgramOptions {
     public static final Options STATS_OPTIONS;
     @EnvironmentVariable(value = "SUBSONIC_URL", sensitive = true)
     public static final Option SUBSONIC_URL_OPTION;
+
     @EnvironmentVariable(value = "SUBSONIC_USER", sensitive = true)
     public static final Option USER_OPTION;
 
@@ -111,6 +120,13 @@ public class ProgramOptions {
         } catch (MalformedURLException e1) {
             throw new IllegalStateException(e1);
         }
+        PROXY_HOST = Option.builder("b").longOpt("bind-addr").numberOfArgs(1).argName("address").required()
+                .desc("Address to bind on locally").build();
+        PROXY_PORT = Option.builder("p").longOpt("bind-port").numberOfArgs(1).argName("port")
+                .converter(Integer::parseInt).desc("Port to bind on locally").required().build();
+        PROXY_CONFIG = Option.builder("c").longOpt("config").numberOfArgs(1).argName("file")
+                .desc("Location of the proxy configuration file. Defaults to %s".formatted(DEFAULT_PROXY_CONFIG))
+                .build();
         GEN_COMPOSITE_MOOD = Option.builder("m").longOpt("composite-mood").numberOfArgs(1)
                 .desc("Filter songs by their composite moods. Pass ?list to print a list of composite moods.").build();
         MODELS_BASE_URL = Option.builder().longOpt("base-url").numberOfArgs(1).argName("url")
@@ -225,6 +241,9 @@ public class ProgramOptions {
                 .addOption(ProgramOptions.PASSWORD_OPTION).addOption(SUBSONIC_URL_OPTION)
                 .addOption(CREATE_PLAYLIST_OPTION).addOption(DELETE_PLAYLIST_OPTION);
         MODELS_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(MODELS_UPDATE).addOption(MODELS_BASE_URL);
+        PROXY_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(PROXY_CONFIG).addOption(PROXY_HOST)
+                .addOption(PROXY_PORT)
+                .addOption(SUBSONIC_URL_OPTION);
 
         ENV_VARIABLES = getEnvironmentVariables();
     }

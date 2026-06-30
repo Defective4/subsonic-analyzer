@@ -21,13 +21,14 @@ import io.github.defective4.audioanalyzer.app.cli.consumer.EnvironmentConsumer;
 import io.github.defective4.audioanalyzer.app.cli.consumer.ModelsConsumer;
 import io.github.defective4.audioanalyzer.app.cli.consumer.PlsGenerateConsumer;
 import io.github.defective4.audioanalyzer.app.cli.consumer.PlsToolsConsumer;
+import io.github.defective4.audioanalyzer.app.cli.consumer.ProxyConsumer;
 import io.github.defective4.audioanalyzer.app.cli.consumer.StatsConsumer;
 
 public class CLI {
 
     private static final Map<String, CLIConsumer> COMMANDS = map("analyze", new AnalyzeConsumer(), "generate-playlist",
             new PlsGenerateConsumer(), "stats", new StatsConsumer(), "models", new ModelsConsumer(), "playlist-tools",
-            new PlsToolsConsumer(), "env", new EnvironmentConsumer());
+            new PlsToolsConsumer(), "env", new EnvironmentConsumer(), "proxy", new ProxyConsumer());
 
     public static void main(String[] args) throws Exception {
         String envCmd = System.getenv(App.COMMAND_ENV);
