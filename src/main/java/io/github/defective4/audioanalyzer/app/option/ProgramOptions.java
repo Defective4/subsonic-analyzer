@@ -38,7 +38,7 @@ public class ProgramOptions {
     public static final String DEFAULT_ESSENTIA = "http://127.0.0.1:8000/";
     public static final int DEFAULT_LIMIT = 30;
     public static final URL DEFAULT_MODELS_BASE_URL;
-    public static final String DEFAULT_PROXY_CONFIG = "config.yml";
+    public static final String DEFAULT_PROXY_CONFIG = "proxy.yml";
     @EnvironmentVariable("PLAYLIST_DELETE")
     public static final Option DELETE_PLAYLIST_OPTION;
     public static final Options ENV_OPTIONS;
@@ -242,8 +242,7 @@ public class ProgramOptions {
                 .addOption(CREATE_PLAYLIST_OPTION).addOption(DELETE_PLAYLIST_OPTION);
         MODELS_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(MODELS_UPDATE).addOption(MODELS_BASE_URL);
         PROXY_OPTIONS = new Options().addOptions(COMMON_OPTIONS).addOption(PROXY_CONFIG).addOption(PROXY_HOST)
-                .addOption(PROXY_PORT)
-                .addOption(SUBSONIC_URL_OPTION);
+                .addOption(PROXY_PORT).addOption(SUBSONIC_URL_OPTION);
 
         ENV_VARIABLES = getEnvironmentVariables();
     }

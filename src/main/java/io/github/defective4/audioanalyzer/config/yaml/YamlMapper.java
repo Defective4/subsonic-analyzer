@@ -41,27 +41,23 @@ public class YamlMapper {
             Object value = map.get(param.getName());
             if (value == null) {
                 params.add(null);
-            } else if(type.isArray() && List.class.isAssignableFrom(value.getClass())) {
-                List<?> list = (List<?>)value;
-                if(Record[].class.isAssignableFrom(type)) {
-                    Record[] array = list.stream()
-                            .filter(m -> m instanceof Map)
-                            .map(m -> {
-                                try {
-                                    return load((Map<String, Object>)m, type.getComponentType());
-                                } catch (NoSuchFieldException | SecurityException | NoSuchMethodException
-                                        | InstantiationException | IllegalAccessException | IllegalArgumentException
-                                        | InvocationTargetException e) {
-                                    throw new IllegalStateException(e);
-                                }
-                            })
-                            .toArray(v -> (Record[])Array.newInstance(type.getComponentType(), v));
+            } else if (type.isArray() && List.class.isAssignableFrom(value.getClass())) {
+                List<?> list = (List<?>) value;
+                if (Record[].class.isAssignableFrom(type)) {
+                    Record[] array = list.stream().filter(m -> m instanceof Map).map(m -> {
+                        try {
+                            return load((Map<String, Object>) m, type.getComponentType());
+                        } catch (NoSuchFieldException | SecurityException | NoSuchMethodException
+                                | InstantiationException | IllegalAccessException | IllegalArgumentException
+                                | InvocationTargetException e) {
+                            throw new IllegalStateException(e);
+                        }
+                    }).toArray(v -> (Record[]) Array.newInstance(type.getComponentType(), v));
                     params.add(array);
                 } else {
-                    Object[] array = list.stream()
-                            .filter(m -> type.componentType().isAssignableFrom(m.getClass()))
+                    Object[] array = list.stream().filter(m -> type.componentType().isAssignableFrom(m.getClass()))
                             .map(m -> type.componentType().cast(m))
-                            .toArray(v -> (Object[])Array.newInstance(type.getComponentType(), v));
+                            .toArray(v -> (Object[]) Array.newInstance(type.getComponentType(), v));
                     params.add(array);
                 }
             } else if (Record.class.isAssignableFrom(type) && Map.class.isAssignableFrom(value.getClass())) {

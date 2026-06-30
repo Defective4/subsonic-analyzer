@@ -6,6 +6,16 @@ import org.apache.commons.cli.Converter;
 
 public class IntegerExpressionConverter implements Converter<NumericExpression, ExpressionConversionException> {
 
+    private final float multiplier;
+
+    public IntegerExpressionConverter() {
+        this(1);
+    }
+
+    public IntegerExpressionConverter(int multiplier) {
+        this.multiplier = multiplier;
+    }
+
     @Override
     public NumericExpression apply(String string) throws ExpressionConversionException {
         String exprStr = string;
@@ -28,7 +38,7 @@ public class IntegerExpressionConverter implements Converter<NumericExpression, 
         } catch (NumberFormatException e) {
             throw new ExpressionConversionException("The expression %s sis invalid".formatted(string));
         }
-        return new NumericExpression(type, val);
+        return new NumericExpression(type, multiplier == 1 ? val : val / multiplier);
     }
 
 }
