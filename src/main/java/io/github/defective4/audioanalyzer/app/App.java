@@ -341,7 +341,7 @@ public class App {
             api.updatePlaylist(playlist.id, null, -1, pub);
         }
         logger.info("Adding songs to the playlist...");
-        for (Track t : similar) api.updatePlaylist(playlist.id, t.id(), -1, pub);
+        api.updatePlaylist(playlist.id, similar.stream().map(Track::id).toList(), -1, pub);
         logger.info("Added {} songs to playlist {}!", similar.size(), playlist.name);
 
         if (printJSON) System.out.println(gson.toJson(playlist));

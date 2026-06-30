@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
@@ -170,7 +171,8 @@ public class SubsonicAPI {
         return request("ping", Map.of());
     }
 
-    public void updatePlaylist(String id, String songToAdd, int songToRemove, boolean isPublic) throws IOException {
+    public void updatePlaylist(String id, List<String> songToAdd, int songToRemove, boolean isPublic)
+            throws IOException {
         Map<String, Object> map = new HashMap<>();
         if (songToAdd != null) map.put("songIdToAdd", songToAdd);
         if (songToRemove >= 0) map.put("songIndexToRemove", songToRemove);
@@ -197,8 +199,18 @@ public class SubsonicAPI {
         params.put("v", version);
         params.put("c", clientId);
         params.put("f", "json");
-        params.putAll(queryParameters);
         StringBuilder queryBuilder = new StringBuilder("?");
+        for (Entry<String, Object> entry : queryParameters.entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof List<?> ls) {
+                for (Object obj : ls) {
+                    queryBuilder.append("%s=%s&".formatted(entry.getKey(),
+                            URLEncoder.encode(obj.toString(), StandardCharsets.UTF_8)));
+                }
+            } else {
+                params.put(entry.getKey(), value);
+            }
+        }
         params.forEach((k, v) -> queryBuilder
                 .append(String.format("%s=%s&", k, URLEncoder.encode(v.toString(), StandardCharsets.UTF_8))));
         String queryString = queryBuilder.toString();

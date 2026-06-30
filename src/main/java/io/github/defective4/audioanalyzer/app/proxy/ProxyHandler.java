@@ -76,11 +76,11 @@ public class ProxyHandler {
                         String id = pls.get("id").getAsString();
                         executorService.submit(() -> {
                             try {
-                                for (String entry : Arrays.stream(libraryManager.generateMoodPlaylist(api, 30, mood,
-                                        null, null, "none", "none", null).entry).map(obj -> obj.get("id").getAsString())
-                                        .toList()) {
-                                    api.updatePlaylist(id, entry, -1, false);
-                                }
+                                api.updatePlaylist(id,
+                                        Arrays.stream(libraryManager.generateMoodPlaylist(api, 30, mood, null, null,
+                                                "none", "none", null).entry).map(obj -> obj.get("id").getAsString())
+                                                .toList(),
+                                        -1, false);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
