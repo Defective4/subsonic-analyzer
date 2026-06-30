@@ -38,7 +38,6 @@ public class ProxyConsumer implements CLIConsumer {
             config = YamlMapper.load(new Yaml().load(reader), ProxyConfiguration.class);
         }
 
-
         return true;
     }
 

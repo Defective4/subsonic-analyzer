@@ -7,22 +7,23 @@ import io.github.defective4.audioanalyzer.ml.mood.CompositeMood;
 import io.github.defective4.audioanalyzer.ml.mood.MoodTypes;
 import io.github.defective4.audioanalyzer.util.FontAwesomeIcons;
 
-public record ProxyPlaylistConfig(String name, String mood, String icon, String color, int limit, String iconColor) {
-    public ProxyPlaylistConfig(String name, String mood, String icon, String color, int limit, String iconColor) {
-        this.name = name;
-        this.mood = mood;
+public record ProxyPlaylistConfig(String name, String mood, String icon, String color, Integer limit,
+        String iconColor) {
+    public ProxyPlaylistConfig(String name, String mood, String icon, String color, Integer limit, String iconColor) {
+        this.name = Objects.requireNonNull(name);
+        this.mood = Objects.requireNonNull(mood);
         this.icon = icon;
         this.color = color;
-        this.limit = limit;
+        this.limit = limit == null ? 30 : limit;
         this.iconColor = iconColor;
         getMood();
-        getIcon();
-        getColor();
-        getIconColor();
+        if (icon != null) getIcon();
+        if (color != null) getColor();
+        if (iconColor != null) getIconColor();
     }
 
     public Color getIconColor() {
-        return Color.decode(iconColor);
+        return iconColor == null ? Color.black : Color.decode(iconColor);
     }
 
     public CompositeMood getMood() {
@@ -30,7 +31,7 @@ public record ProxyPlaylistConfig(String name, String mood, String icon, String 
     }
 
     public Color getColor() {
-        return Color.decode(color);
+        return color == null ? Color.white : Color.decode(color);
     }
 
     public String getIcon() {
