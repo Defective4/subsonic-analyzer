@@ -1,8 +1,10 @@
 FROM ubuntu:26.04
 
 RUN mkdir /app
+RUN mkdir -p /usr/share/subsonic-analyzer/lib/
 WORKDIR /app
 ADD target/subsonic*.jar /app/subsonic.jar
+ADD target/dependency /usr/share/subsonic-analyzer/lib/
 ADD analyzer.py /app/
 
 RUN apt-get update
