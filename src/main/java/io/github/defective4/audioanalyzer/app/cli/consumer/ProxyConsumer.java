@@ -5,8 +5,10 @@ import static io.github.defective4.audioanalyzer.app.option.ProgramOptions.*;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -23,9 +25,12 @@ public class ProxyConsumer implements CLIConsumer {
         File cfgFile = new File(cli.getOptionValue(PROXY_CONFIG, DEFAULT_PROXY_CONFIG));
 
         if (!cfgFile.exists()) {
-            ProxyConfiguration def = new ProxyConfiguration();
-            try (Writer writer = new FileWriter(cfgFile)) {
-                writer.write(new Yaml().dumpAsMap(YamlMapper.dump(def)));
+            try (Reader reader = new InputStreamReader(getClass().getResourceAsStream("/proxy.yml"),
+                    StandardCharsets.UTF_8)) {
+                ProxyConfiguration def = YamlMapper.load(new Yaml().load(reader), ProxyConfiguration.class);
+                try (Writer writer = new FileWriter(cfgFile, StandardCharsets.UTF_8)) {
+                    writer.write(new Yaml().dumpAsMap(YamlMapper.dump(def)));
+                }
             }
             System.err.println("Saved default configuration file to %s.".formatted(cfgFile));
             System.err.println("Edit it, and then start the proxy service again.");
