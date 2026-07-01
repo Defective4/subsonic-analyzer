@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.config;
+package io.github.defective4.audioanalyzer.config.proxy;
 
 import io.github.defective4.audioanalyzer.app.proxy.cron.CronExpression;
 

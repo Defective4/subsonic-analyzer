@@ -38,7 +38,8 @@ import io.github.defective4.audioanalyzer.app.cli.CLI;
 import io.github.defective4.audioanalyzer.app.option.EnvironmentVariable;
 import io.github.defective4.audioanalyzer.app.option.ProgramOptions;
 import io.github.defective4.audioanalyzer.app.proxy.AnalyzerProxy;
-import io.github.defective4.audioanalyzer.config.ProxyConfiguration;
+import io.github.defective4.audioanalyzer.config.proxy.ProxyConfiguration;
+import io.github.defective4.audioanalyzer.config.proxy.ProxyServerConfig;
 import io.github.defective4.audioanalyzer.exception.MissingModelsException;
 import io.github.defective4.audioanalyzer.exception.SubsonicException;
 import io.github.defective4.audioanalyzer.expr.NumericExpression;
@@ -451,8 +452,12 @@ public class App {
         logger.info("Done!");
     }
 
-    public void startProxy(String url, int localPort, String localHost, ProxyConfiguration config)
-            throws MalformedURLException {
+    public void startProxy(ProxyConfiguration config) throws MalformedURLException {
+        ProxyServerConfig srv = config.server();
+        String url = srv.targetURL();
+        while (url.endsWith("/")) url = url.substring(0, url.length() - 1);
+        int localPort = srv.port();
+        String localHost = srv.host();
         AnalyzerProxy proxy = new AnalyzerProxy(url, localPort, localHost, db, config);
         proxy.start();
     }

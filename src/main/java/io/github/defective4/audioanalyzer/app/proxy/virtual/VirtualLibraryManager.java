@@ -20,8 +20,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.github.defective4.audioanalyzer.app.App;
-import io.github.defective4.audioanalyzer.config.ProxyPlaylistConfig;
-import io.github.defective4.audioanalyzer.config.ProxyVirtualLibConfig;
+import io.github.defective4.audioanalyzer.config.proxy.ProxyPlaylistConfig;
+import io.github.defective4.audioanalyzer.config.proxy.ProxyVirtualLibConfig;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.ml.model.Track;
 import io.github.defective4.audioanalyzer.ml.mood.CompositeMood;

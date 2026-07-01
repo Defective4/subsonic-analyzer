@@ -13,17 +13,13 @@ import org.apache.commons.cli.Options;
 import org.yaml.snakeyaml.Yaml;
 
 import io.github.defective4.audioanalyzer.app.App;
-import io.github.defective4.audioanalyzer.config.ProxyConfiguration;
+import io.github.defective4.audioanalyzer.config.proxy.ProxyConfiguration;
 import io.github.defective4.audioanalyzer.config.yaml.YamlMapper;
 
 public class ProxyConsumer implements CLIConsumer {
 
     @Override
     public boolean consume(CommandLine cli, App prog) throws Exception {
-        String target = cli.getOptionValue(SUBSONIC_URL_OPTION);
-        while (target.endsWith("/")) target = target.substring(0, target.length() - 1);
-        String host = cli.getOptionValue(PROXY_HOST);
-        int port = cli.getParsedOptionValue(PROXY_PORT);
         File cfgFile = new File(cli.getOptionValue(PROXY_CONFIG, DEFAULT_PROXY_CONFIG));
 
         if (!cfgFile.exists()) {
@@ -42,7 +38,7 @@ public class ProxyConsumer implements CLIConsumer {
             config = YamlMapper.load(new Yaml().load(reader), ProxyConfiguration.class);
         }
 
-        prog.startProxy(target, port, host, config);
+        prog.startProxy(config);
         return true;
     }
 

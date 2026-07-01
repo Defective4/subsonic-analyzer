@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.config;
+package io.github.defective4.audioanalyzer.config.proxy;
 
 public record CronConfiguration(Boolean enabled, CronTasksConfig tasks) {
 
