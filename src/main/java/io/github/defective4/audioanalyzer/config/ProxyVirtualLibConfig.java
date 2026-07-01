@@ -5,16 +5,16 @@ import java.util.Objects;
 
 import io.github.defective4.audioanalyzer.util.FontAwesomeIcons;
 
-public record ProxyVirtualLibConfig(Boolean enableVirtualLibrary, Boolean generateFromRecents, Integer fromRecentsLimit,
+public record ProxyVirtualLibConfig(Boolean enableVirtualLibrary, Boolean generateFromRecents, Integer defaultPlaylistLimit,
         String fromRecentsIcon, String fromRecentsCoverColor, String fromRecentsName, String fromRecentsIconColor,
         String defaultPlaylistAuthor, String defaultPlaylistDescription, ProxyPlaylistConfig[] playlists) {
 
-    public ProxyVirtualLibConfig(Boolean enableVirtualLibrary, Boolean generateFromRecents, Integer fromRecentsLimit,
+    public ProxyVirtualLibConfig(Boolean enableVirtualLibrary, Boolean generateFromRecents, Integer defaultPlaylistLimit,
             String fromRecentsIcon, String fromRecentsCoverColor, String fromRecentsName, String fromRecentsIconColor,
             String defaultPlaylistAuthor, String defaultPlaylistDescription, ProxyPlaylistConfig[] playlists) {
         this.enableVirtualLibrary = enableVirtualLibrary == null ? true : enableVirtualLibrary;
         this.generateFromRecents = generateFromRecents == null ? true : generateFromRecents;
-        this.fromRecentsLimit = fromRecentsLimit == null ? 30 : fromRecentsLimit;
+        this.defaultPlaylistLimit = defaultPlaylistLimit == null ? 30 : defaultPlaylistLimit;
         this.fromRecentsIcon = fromRecentsIcon;
         this.fromRecentsCoverColor = fromRecentsCoverColor;
         this.fromRecentsName = Objects.requireNonNull(fromRecentsName);

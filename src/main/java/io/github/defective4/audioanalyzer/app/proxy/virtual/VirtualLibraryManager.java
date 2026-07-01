@@ -66,7 +66,7 @@ public class VirtualLibraryManager {
         if (!generatedPlaylists.containsKey(user)) {
             HashMap<String, Playlist> map = new LinkedHashMap<>();
             if (config.generateFromRecents()) {
-                Playlist recent = generatePlaylistFromRecents(api, config.fromRecentsLimit());
+                Playlist recent = generatePlaylistFromRecents(api, config.defaultPlaylistLimit());
                 map.put(recent.id, recent);
             }
             for (ProxyPlaylistConfig pls : config.playlists()) {
