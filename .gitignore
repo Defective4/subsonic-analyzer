@@ -10,6 +10,7 @@
 /*.bak
 /*.deb
 /debian/usr
+/debian/etc
 /data
 /*.jpage
 /cache

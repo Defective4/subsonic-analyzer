@@ -1,19 +1,28 @@
 #!/bin/bash
-JRE_URL=https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.11%2B10/OpenJDK21U-jre_x64_linux_hotspot_21.0.11_10.tar.gz
+#JRE_URL=https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.11%2B10/OpenJDK21U-jre_x64_linux_hotspot_21.0.11_10.tar.gz
+JRE_URL=https://raspberry.local/java/OpenJDK21U-jre_x64_linux_hotspot_21.0.11_10.tar.gz
 DEB_SHARE=debian/usr/share/subsonic-analyzer
 BIN_DIR=debian/usr/bin
 MAIN_BIN=$BIN_DIR/subsonic-analysis-tool
 PY_BIN=$BIN_DIR/subsonic-analysis-service
+PROXY_BIN=$BIN_DIR/subsonic-analysis-proxy
 
 sudo apt install -y wget tar
 rm -rf debian/usr
+rm -rf debian/etc
 
 root=$(pwd)
 
 mkdir -p $DEB_SHARE
 mkdir -p debian/usr/bin
+mkdir -p debian/etc/subsonic-analyzer
 
-mvn clean package
+cp -v src/main/resources/proxy.yml debian/etc/subsonic-analyzer/
+
+mvn -DbuildNative=true clean package
+mvn dependency:copy-dependencies
+
+mv -v target/dependency $DEB_SHARE/lib
 
 cd $DEB_SHARE
 wget -O jre.tar.gz $JRE_URL
@@ -37,7 +46,12 @@ source venv/bin/activate
 cd $pwd
 uvicorn $* --app-dir /usr/share/subsonic-analyzer/analyzer analyzer:api
 ' > $PY_BIN
-
 chmod +x $PY_BIN
+
+echo '#!/bin/bash
+subsonic-analysis-tool proxy $*
+' > $PROXY_BIN
+chmod +x $PROXY_BIN
+
 cd $root
-dpkg-deb --root-owner-group --build debian subsonic-analyzer.deb
+dpkg-deb -v --root-owner-group --build debian subsonic-analyzer.deb
