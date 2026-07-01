@@ -28,12 +28,14 @@ import com.google.gson.JsonParser;
 import io.github.defective4.audioanalyzer.app.proxy.virtual.VirtualLibraryManager;
 import io.github.defective4.audioanalyzer.config.proxy.CronTasksConfig;
 import io.github.defective4.audioanalyzer.config.proxy.ProxyConfiguration;
+import io.github.defective4.audioanalyzer.config.proxy.ProxyServerConfig;
 import io.github.defective4.audioanalyzer.cron.CronExpression;
 import io.github.defective4.audioanalyzer.cron.CronTask;
 import io.github.defective4.audioanalyzer.cron.Crontab;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 import io.javalin.Javalin;
+import io.javalin.community.ssl.SslPlugin;
 import io.javalin.http.Context;
 import io.javalin.json.JavalinGson;
 
@@ -60,6 +62,18 @@ public class AnalyzerProxy {
         this.localHost = localHost;
         javalin = Javalin.create(cfg -> {
             cfg.jsonMapper(new JavalinGson());
+            ProxyServerConfig srv = config.server();
+            String crt = srv.sslCertPath();
+            String key = srv.sslKeyPath();
+            if (crt != null && key != null) {
+                cfg.registerPlugin(new SslPlugin(scfg -> {
+                    scfg.pemFromPath(crt, key);
+                    scfg.insecure = false;
+                    scfg.secure = true;
+                    scfg.redirect = true;
+                    scfg.securePort = config.server().port();
+                }));
+            }
             cfg.routes.apiBuilder(() -> {
                 get("*", ctx -> relayRequest(ctx));
                 post("*", ctx -> relayRequest(ctx));

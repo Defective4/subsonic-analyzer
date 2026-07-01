@@ -4,10 +4,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Objects;
 
-public record ProxyServerConfig(String host, Integer port, String targetURL) {
-    public ProxyServerConfig(String host, Integer port, String targetURL) {
+public record ProxyServerConfig(String host, Integer port, String targetURL, String sslCertPath, String sslKeyPath) {
+    public ProxyServerConfig(String host, Integer port, String targetURL, String sslCertPath, String sslKeyPath) {
         this.host = Objects.requireNonNull(host);
         this.port = Objects.requireNonNull(port);
+        this.sslCertPath = sslCertPath;
+        this.sslKeyPath = sslKeyPath;
         if (port > Short.MAX_VALUE || port <= 0) throw new IllegalArgumentException("Invalid port: " + port);
         try {
             this.targetURL = URI.create(targetURL).toURL().toString();
@@ -17,6 +19,6 @@ public record ProxyServerConfig(String host, Integer port, String targetURL) {
     }
 
     public ProxyServerConfig() {
-        this("0.0.0.0", 8080, "https://demo.navidrome.org/");
+        this("0.0.0.0", 8080, "https://demo.navidrome.org/", null, null);
     }
 }
