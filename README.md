@@ -28,7 +28,8 @@ There are several methods of installing Subsonic Music Analyzer, all listed belo
 ### Setup
 ```bash
 $ git clone https://github.com/Defective4/subsonic-analyzer.git && cd subsonic-analyzer
-$ mvn clean package
+$ mvn -DbuildNative clean package
+$ mvn dependency:copy-dependencies
 $ docker compose up
 ```
 This will build the Docker image and start the analyzer server.  You can start the tool any time you want by typing `docker compose up` in the project directory.
