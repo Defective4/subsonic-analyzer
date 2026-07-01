@@ -25,12 +25,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import io.github.defective4.audioanalyzer.app.proxy.cron.CronExpression;
-import io.github.defective4.audioanalyzer.app.proxy.cron.CronTask;
-import io.github.defective4.audioanalyzer.app.proxy.cron.Crontab;
 import io.github.defective4.audioanalyzer.app.proxy.virtual.VirtualLibraryManager;
 import io.github.defective4.audioanalyzer.config.proxy.CronTasksConfig;
 import io.github.defective4.audioanalyzer.config.proxy.ProxyConfiguration;
+import io.github.defective4.audioanalyzer.cron.CronExpression;
+import io.github.defective4.audioanalyzer.cron.CronTask;
+import io.github.defective4.audioanalyzer.cron.Crontab;
 import io.github.defective4.audioanalyzer.ml.Repository;
 import io.github.defective4.audioanalyzer.subsonic.model.SubsonicResponse;
 import io.javalin.Javalin;

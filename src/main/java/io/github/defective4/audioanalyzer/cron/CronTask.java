@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.app.proxy.cron;
+package io.github.defective4.audioanalyzer.cron;
 
 public class CronTask {
     private final CronExpression at;

@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.app.proxy.cron;
+package io.github.defective4.audioanalyzer.cron;
 
 import java.time.LocalDateTime;
 import java.util.Calendar;

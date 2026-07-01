@@ -1,4 +1,4 @@
-package io.github.defective4.audioanalyzer.app.proxy.cron;
+package io.github.defective4.audioanalyzer.cron;
 
 import java.util.Arrays;
 import java.util.Objects;

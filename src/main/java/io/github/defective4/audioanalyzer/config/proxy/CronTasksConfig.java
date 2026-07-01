@@ -1,6 +1,6 @@
 package io.github.defective4.audioanalyzer.config.proxy;
 
-import io.github.defective4.audioanalyzer.app.proxy.cron.CronExpression;
+import io.github.defective4.audioanalyzer.cron.CronExpression;
 
 public record CronTasksConfig(String regenerateVirtualLibrary) {
 
