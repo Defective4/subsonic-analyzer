@@ -1,10 +1,10 @@
 Package: subsonic-analyzer
 Package-Type: deb
-Version: 0.0.1
+Version: 0.0.2
 Maintainer: Defective <def3ctive4@gmail.com>
 Description: Essentia Tensorflow powered music analysis tool for Subsonic-compatible instances 
 Architecture: amd64
 Homepage: https://github.com/Defective4/subsonic-audio-analyzer
 Bugs: https://github.com/Defective4/subsonic-audio-analyzer/issues
 Pre-Depends: python3-venv, python3-pip, bash
-Installed-Size: 200000
+Installed-Size: 730167

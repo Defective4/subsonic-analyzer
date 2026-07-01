@@ -169,12 +169,6 @@ public class AnalyzerProxy {
         return header != null && header.contains("gzip");
     }
 
-//    public static void main(String[] args) throws Exception {
-//        AnalyzerProxy proxy = new AnalyzerProxy("https://music.raspberry.local", 8080, "127.0.0.1",
-//                new Repository("jdbc:sqlite:mood.sqlite"), new ProxyConfiguration());
-//        proxy.start();
-//    }
-
     private static void copyHeaders(Map<String, List<String>> headerFields, Context ctx) {
         for (Entry<String, List<String>> entry : headerFields.entrySet()) {
             if (entry.getKey() != null && !"Content-Length".equalsIgnoreCase(entry.getKey())) {
